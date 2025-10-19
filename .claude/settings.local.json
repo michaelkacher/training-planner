@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir)",
+      "Bash(npm create svelte@latest frontend)",
+      "Bash(npx sv@latest create frontend --template minimal --types typescript --no-add-ons --no-install)",
+      "Bash(npx sv@latest create frontend --template minimal --types ts --no-add-ons --no-install)",
+      "Bash(mkdir backend)",
+      "Bash(npm init -y)",
+      "Bash(dir frontendsrc)",
+      "Bash(dir frontend)",
+      "Bash(npm install)",
+      "Bash(npm run dev)",
+      "Bash(curl http://localhost:3000/health)",
+      "Bash(curl http://localhost:3000/api/v1/athletes)",
+      "Bash(node --version)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :3000)",
+      "Bash(taskkill //F //PID 5616)",
+      "Bash(findstr \":3000 \")",
+      "Bash(taskkill //F //PID 15020)",
+      "Bash(curl http://localhost:3000/api/v1/workouts)",
+      "Bash(powershell -ExecutionPolicy Bypass -File kill-ports.ps1)",
+      "Bash(awk '{print $5}')",
+      "Bash(xargs -r -I {} taskkill //F //PID {})"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
