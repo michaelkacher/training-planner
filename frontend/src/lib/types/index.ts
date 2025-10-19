@@ -66,6 +66,14 @@ export interface CreateTrainingPlanDTO {
 
 export type SessionStatus = 'scheduled' | 'completed' | 'partial' | 'skipped';
 
+export interface Exercise {
+  name: string;
+  sets?: number;
+  reps?: string;
+  focus: string;
+  notes?: string;
+}
+
 export interface WorkoutSession {
   id: string;
   athlete_id: string;
@@ -75,6 +83,8 @@ export interface WorkoutSession {
   status: SessionStatus;
   notes?: string;
   workout_summary?: string;
+  workout_title?: string;
+  exercises?: Exercise[];
   created_at: string;
   updated_at: string;
   workout?: Workout;

@@ -205,7 +205,8 @@ export function registerTrainingPlanRoutes(fastify: FastifyInstance) {
             plan.id,
             plan.athlete_id,
             new Date(plan.start_date),
-            new Date(plan.end_date)
+            new Date(plan.end_date),
+            plan.phases // Pass phases to generator
           );
 
           // Add sessions to mock storage

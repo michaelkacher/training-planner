@@ -70,6 +70,8 @@ export interface TrainingPlan {
   start_date?: string;
   end_date?: string;
   is_active: boolean;
+  template_id?: string;
+  phases?: Phase[];
   created_at: string;
   updated_at: string;
 }
@@ -93,9 +95,31 @@ export interface CreateTrainingPlanDTO {
   phase_type: 'Off-Season' | 'Pre-Season' | 'Competition' | 'Recovery';
   start_date?: string;
   end_date?: string;
+  phases?: Phase[];
 }
 
 export type SessionStatus = 'scheduled' | 'completed' | 'partial' | 'skipped';
+
+export interface Exercise {
+  name: string;
+  sets?: number;
+  reps?: string;
+  focus: string;
+  notes?: string;
+}
+
+export interface WorkoutDay {
+  day: number;
+  title: string;
+  exercises: Exercise[];
+}
+
+export interface Phase {
+  name: string;
+  weeks: string;
+  description: string;
+  workoutDays: WorkoutDay[];
+}
 
 export interface WorkoutSession {
   id: string;
@@ -106,6 +130,8 @@ export interface WorkoutSession {
   status: SessionStatus;
   notes?: string;
   workout_summary?: string;
+  workout_title?: string;
+  exercises?: Exercise[];
   created_at: string;
   updated_at: string;
 }
@@ -121,4 +147,5 @@ export interface UpdateWorkoutSessionDTO {
   status?: SessionStatus;
   notes?: string;
   workout_summary?: string;
+  scheduled_date?: string;
 }

@@ -64,7 +64,8 @@
         phase_type: phaseType,
         start_date: planStartDate.toISOString().split('T')[0],
         end_date: endDate.toISOString().split('T')[0],
-        template_id: template.id
+        template_id: template.id,
+        phases: template.phases // Include phase data with exercises
       };
 
       const response = await fetch('http://localhost:3000/api/v1/training-plans', {

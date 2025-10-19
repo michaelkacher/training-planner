@@ -13,6 +13,11 @@
   let sessionNotes = $state("");
   let isSaving = $state(false);
 
+  // Drag and drop state
+  let draggedSession = $state<WorkoutSession | null>(null);
+  let dragOverDate = $state<string | null>(null);
+  let isDragging = $state(false);
+
   const daysOfWeek = [
     "Sunday",
     "Monday",
@@ -213,6 +218,141 @@
         return "Scheduled";
     }
   }
+
+  // Drag and drop handlers for desktop
+  function handleDragStart(event: DragEvent, session: WorkoutSession) {
+    if (!event.dataTransfer) return;
+    draggedSession = session;
+    isDragging = true;
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/html", ""); // Required for Firefox
+  }
+
+  function handleDragEnd() {
+    draggedSession = null;
+    dragOverDate = null;
+    isDragging = false;
+  }
+
+  function handleDragOver(event: DragEvent, date: Date) {
+    event.preventDefault();
+    if (!event.dataTransfer) return;
+    event.dataTransfer.dropEffect = "move";
+    dragOverDate = formatDateForAPI(date);
+  }
+
+  function handleDragLeave() {
+    dragOverDate = null;
+  }
+
+  async function handleDrop(event: DragEvent, targetDate: Date) {
+    event.preventDefault();
+    if (!draggedSession) return;
+
+    const newDate = formatDateForAPI(targetDate);
+    const oldDate = draggedSession.scheduled_date;
+
+    // Don't do anything if dropped on same day
+    if (newDate === oldDate) {
+      handleDragEnd();
+      return;
+    }
+
+    // Update the session date
+    await updateSessionDate(draggedSession.id, newDate);
+    handleDragEnd();
+  }
+
+  // Touch handlers for mobile
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  function handleTouchStart(event: TouchEvent, session: WorkoutSession) {
+    const touch = event.touches[0];
+    if (!touch) return;
+
+    draggedSession = session;
+    isDragging = true;
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+  }
+
+  function handleTouchMove(event: TouchEvent) {
+    if (!draggedSession) return;
+
+    const touch = event.touches[0];
+    if (!touch) return;
+
+    // Find which day card is under the touch point
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    const dayCard = element?.closest('.day-card');
+
+    if (dayCard) {
+      const dateStr = dayCard.getAttribute('data-date');
+      if (dateStr) {
+        dragOverDate = dateStr;
+      }
+    }
+  }
+
+  async function handleTouchEnd(event: TouchEvent) {
+    if (!draggedSession) return;
+
+    const touch = event.changedTouches[0];
+    if (!touch) {
+      handleDragEnd();
+      return;
+    }
+
+    // Find which day card the touch ended on
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    const dayCard = element?.closest('.day-card');
+
+    if (dayCard) {
+      const dateStr = dayCard.getAttribute('data-date');
+      if (dateStr && dateStr !== draggedSession.scheduled_date) {
+        await updateSessionDate(draggedSession.id, dateStr);
+      }
+    }
+
+    handleDragEnd();
+  }
+
+  async function updateSessionDate(sessionId: string, newDate: string) {
+    isSaving = true;
+    errorMessage = null;
+
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/v1/workout-sessions/${sessionId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ scheduled_date: newDate }),
+        }
+      );
+
+      if (response.ok) {
+        const updated = await response.json();
+        // Update local state
+        weekSessions = weekSessions.map((s) =>
+          s.id === updated.id ? updated : s
+        );
+
+        // Update selected session if it's the one being moved
+        if (selectedSession?.id === updated.id) {
+          selectedSession = updated;
+        }
+      } else {
+        errorMessage = "Failed to move workout";
+      }
+    } catch (error) {
+      console.error("Error updating session date:", error);
+      errorMessage = "Failed to move workout";
+    } finally {
+      isSaving = false;
+    }
+  }
 </script>
 
 <div class="container">
@@ -251,11 +391,18 @@
       {#each getWeekDays() as day, index (day.toISOString())}
         {@const session = getSessionForDay(day)}
         {@const isTodayDay = isToday(day)}
+        {@const dateStr = formatDateForAPI(day)}
+        {@const isDropTarget = dragOverDate === dateStr}
+        {@const isBeingDragged = draggedSession?.id === session?.id}
         <div
           class="day-card {isTodayDay ? 'today' : ''} {session
             ? 'has-session'
-            : ''}"
-          onclick={() => session && selectSession(session)}
+            : ''} {isDropTarget ? 'drop-target' : ''} {isBeingDragged ? 'dragging' : ''}"
+          data-date={dateStr}
+          ondragover={(e) => handleDragOver(e, day)}
+          ondragleave={handleDragLeave}
+          ondrop={(e) => handleDrop(e, day)}
+          onclick={() => session && !isDragging && selectSession(session)}
         >
           <div class="day-header">
             <span class="day-name">{daysOfWeek[index]}</span>
@@ -264,8 +411,14 @@
 
           {#if session}
             <div
-              class="session-summary"
+              class="session-summary draggable-session"
               style="border-left-color: {getStatusColor(session.status)}"
+              draggable="true"
+              ondragstart={(e) => handleDragStart(e, session)}
+              ondragend={handleDragEnd}
+              ontouchstart={(e) => handleTouchStart(e, session)}
+              ontouchmove={handleTouchMove}
+              ontouchend={handleTouchEnd}
             >
               <div class="session-title">
                 {session.workout_summary || "Workout Scheduled"}
@@ -303,10 +456,40 @@
 
           <div class="detail-section">
             <div class="detail-label">Workout</div>
-            <div class="detail-value">
-              {selectedSession.workout_summary || "No details available"}
+            <div class="detail-value workout-title">
+              {selectedSession.workout_title || selectedSession.workout_summary || "No details available"}
             </div>
           </div>
+
+          {#if selectedSession.exercises && selectedSession.exercises.length > 0}
+            <div class="detail-section exercises-section">
+              <div class="detail-label">Exercises</div>
+              <div class="exercises-list">
+                {#each selectedSession.exercises as exercise, index}
+                  <div class="exercise-item">
+                    <div class="exercise-header">
+                      <span class="exercise-number">{index + 1}</span>
+                      <strong class="exercise-name">{exercise.name}</strong>
+                    </div>
+                    <div class="exercise-details">
+                      {#if exercise.sets}
+                        <span class="exercise-meta">{exercise.sets} sets</span>
+                      {/if}
+                      {#if exercise.reps}
+                        <span class="exercise-meta">× {exercise.reps} reps</span>
+                      {/if}
+                      {#if exercise.focus}
+                        <span class="exercise-focus">Focus: {exercise.focus}</span>
+                      {/if}
+                    </div>
+                    {#if exercise.notes}
+                      <div class="exercise-notes">{exercise.notes}</div>
+                    {/if}
+                  </div>
+                {/each}
+              </div>
+            </div>
+          {/if}
 
           <div class="detail-section">
             <div class="detail-label">Status</div>
@@ -530,6 +713,36 @@
     padding-left: 0.75rem;
   }
 
+  .draggable-session {
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+
+  .draggable-session:active {
+    cursor: grabbing;
+  }
+
+  .day-card.dragging {
+    opacity: 0.5;
+  }
+
+  .day-card.drop-target {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+  }
+
+  .day-card.drop-target .day-name,
+  .day-card.drop-target .day-date {
+    color: white;
+  }
+
+  .day-card.drop-target .rest-day {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
   .session-title {
     font-weight: 600;
     color: #333;
@@ -681,6 +894,90 @@
   .btn-primary:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  .workout-title {
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: #333;
+  }
+
+  .exercises-section {
+    background: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 12px;
+  }
+
+  .exercises-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .exercise-item {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+  }
+
+  .exercise-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .exercise-number {
+    background: #667eea;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .exercise-name {
+    color: #333;
+    font-size: 1rem;
+  }
+
+  .exercise-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-left: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .exercise-meta {
+    background: #e0e7ff;
+    color: #667eea;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .exercise-focus {
+    color: #666;
+    font-size: 0.9rem;
+    font-style: italic;
+  }
+
+  .exercise-notes {
+    margin-left: 2rem;
+    color: #666;
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    background: #f9fafb;
+    border-radius: 6px;
+    border-left: 2px solid #d1d5db;
   }
 
   @media (max-width: 1024px) {
