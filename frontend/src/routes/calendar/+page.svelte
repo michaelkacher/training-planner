@@ -4,7 +4,7 @@
 
   const ATHLETE_ID = "default-athlete-123";
 
-  let activePlan = $state<TrainingPlan | null>(null);
+  let activePlans = $state<TrainingPlan[]>([]);
   let currentWeekStart = $state(new Date());
   let weekSessions = $state<WorkoutSession[]>([]);
   let selectedSession = $state<WorkoutSession | null>(null);
@@ -30,7 +30,7 @@
 
   onMount(async () => {
     setToCurrentWeek();
-    await loadActivePlan();
+    await loadActivePlans();
     await loadWeekSessions();
     isLoading = false;
   });
@@ -44,34 +44,47 @@
     currentWeekStart = weekStart;
   }
 
-  async function loadActivePlan() {
+  async function loadActivePlans() {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/v1/training-plans?athlete_id=${ATHLETE_ID}`
+        `http://localhost:3000/api/v1/training-plans?athlete_id=${ATHLETE_ID}&is_active=true`
       );
       if (response.ok) {
-        const plans: TrainingPlan[] = await response.json();
-        activePlan = plans.find((p) => p.is_active) || null;
+        activePlans = await response.json();
       }
     } catch (error) {
-      console.error("Error loading active plan:", error);
+      console.error("Error loading active plans:", error);
     }
   }
 
   async function loadWeekSessions() {
-    if (!activePlan) return;
+    if (activePlans.length === 0) {
+      weekSessions = [];
+      return;
+    }
 
     try {
       const weekEnd = new Date(currentWeekStart);
       weekEnd.setDate(currentWeekStart.getDate() + 6);
 
-      const response = await fetch(
-        `http://localhost:3000/api/v1/workout-sessions?athlete_id=${ATHLETE_ID}&training_plan_id=${activePlan.id}&start_date=${formatDateForAPI(currentWeekStart)}&end_date=${formatDateForAPI(weekEnd)}`
-      );
+      // Load sessions from all active plans
+      const allSessions: WorkoutSession[] = [];
 
-      if (response.ok) {
-        weekSessions = await response.json();
+      for (const plan of activePlans) {
+        const response = await fetch(
+          `http://localhost:3000/api/v1/workout-sessions?athlete_id=${ATHLETE_ID}&training_plan_id=${plan.id}&start_date=${formatDateForAPI(currentWeekStart)}&end_date=${formatDateForAPI(weekEnd)}`
+        );
+
+        if (response.ok) {
+          const sessions = await response.json();
+          allSessions.push(...sessions);
+        }
       }
+
+      // Sort by date
+      weekSessions = allSessions.sort((a, b) =>
+        a.scheduled_date.localeCompare(b.scheduled_date)
+      );
     } catch (error) {
       console.error("Error loading week sessions:", error);
       errorMessage = "Failed to load workout sessions";
@@ -100,9 +113,9 @@
     return days;
   }
 
-  function getSessionForDay(date: Date): WorkoutSession | undefined {
+  function getSessionsForDay(date: Date): WorkoutSession[] {
     const dateStr = formatDateForAPI(date);
-    return weekSessions.find((s) => s.scheduled_date === dateStr);
+    return weekSessions.filter((s) => s.scheduled_date === dateStr);
   }
 
   async function previousWeek() {
@@ -258,6 +271,17 @@
       return;
     }
 
+    // Verify target is within current week
+    const weekEnd = new Date(currentWeekStart);
+    weekEnd.setDate(currentWeekStart.getDate() + 6);
+
+    if (targetDate < currentWeekStart || targetDate > weekEnd) {
+      // Target is outside current week, don't allow
+      console.log("Cannot drop outside current week");
+      handleDragEnd();
+      return;
+    }
+
     // Update the session date
     await updateSessionDate(draggedSession.id, newDate);
     handleDragEnd();
@@ -311,7 +335,16 @@
     if (dayCard) {
       const dateStr = dayCard.getAttribute('data-date');
       if (dateStr && dateStr !== draggedSession.scheduled_date) {
-        await updateSessionDate(draggedSession.id, dateStr);
+        // Verify target is within current week
+        const targetDate = new Date(dateStr);
+        const weekEnd = new Date(currentWeekStart);
+        weekEnd.setDate(currentWeekStart.getDate() + 6);
+
+        if (targetDate >= currentWeekStart && targetDate <= weekEnd) {
+          await updateSessionDate(draggedSession.id, dateStr);
+        } else {
+          console.log("Cannot drop outside current week");
+        }
       }
     }
 
@@ -359,10 +392,13 @@
   <header>
     <div>
       <h1>Training Calendar</h1>
-      {#if activePlan}
-        <p class="subtitle">{activePlan.name} - {activePlan.phase_type}</p>
+      {#if activePlans.length > 0}
+        <p class="subtitle">
+          {activePlans.length} Active Plan{activePlans.length > 1 ? 's' : ''}:
+          {activePlans.map(p => p.name).join(', ')}
+        </p>
       {:else}
-        <p class="subtitle">No active training plan</p>
+        <p class="subtitle">No active training plans</p>
       {/if}
     </div>
   </header>
@@ -371,7 +407,7 @@
     <div class="error-banner">{errorMessage}</div>
   {/if}
 
-  {#if !activePlan && !isLoading}
+  {#if activePlans.length === 0 && !isLoading}
     <div class="empty-state">
       <div class="empty-icon">📅</div>
       <h2>No Active Training Plan</h2>
@@ -389,46 +425,50 @@
 
     <div class="calendar-grid">
       {#each getWeekDays() as day, index (day.toISOString())}
-        {@const session = getSessionForDay(day)}
+        {@const sessions = getSessionsForDay(day)}
         {@const isTodayDay = isToday(day)}
         {@const dateStr = formatDateForAPI(day)}
         {@const isDropTarget = dragOverDate === dateStr}
-        {@const isBeingDragged = draggedSession?.id === session?.id}
+        {@const hasBeingDragged = sessions.some(s => s.id === draggedSession?.id)}
         <div
-          class="day-card {isTodayDay ? 'today' : ''} {session
+          class="day-card {isTodayDay ? 'today' : ''} {sessions.length > 0
             ? 'has-session'
-            : ''} {isDropTarget ? 'drop-target' : ''} {isBeingDragged ? 'dragging' : ''}"
+            : ''} {isDropTarget ? 'drop-target' : ''} {hasBeingDragged ? 'dragging' : ''}"
           data-date={dateStr}
           ondragover={(e) => handleDragOver(e, day)}
           ondragleave={handleDragLeave}
           ondrop={(e) => handleDrop(e, day)}
-          onclick={() => session && !isDragging && selectSession(session)}
         >
           <div class="day-header">
             <span class="day-name">{daysOfWeek[index]}</span>
             <span class="day-date">{day.getDate()}</span>
           </div>
 
-          {#if session}
-            <div
-              class="session-summary draggable-session"
-              style="border-left-color: {getStatusColor(session.status)}"
-              draggable="true"
-              ondragstart={(e) => handleDragStart(e, session)}
-              ondragend={handleDragEnd}
-              ontouchstart={(e) => handleTouchStart(e, session)}
-              ontouchmove={handleTouchMove}
-              ontouchend={handleTouchEnd}
-            >
-              <div class="session-title">
-                {session.workout_summary || "Workout Scheduled"}
-              </div>
-              <div
-                class="session-status"
-                style="color: {getStatusColor(session.status)}"
-              >
-                {getStatusLabel(session.status)}
-              </div>
+          {#if sessions.length > 0}
+            <div class="sessions-container">
+              {#each sessions as session (session.id)}
+                <div
+                  class="session-summary draggable-session"
+                  style="border-left-color: {getStatusColor(session.status)}"
+                  draggable="true"
+                  ondragstart={(e) => handleDragStart(e, session)}
+                  ondragend={handleDragEnd}
+                  ontouchstart={(e) => handleTouchStart(e, session)}
+                  ontouchmove={handleTouchMove}
+                  ontouchend={handleTouchEnd}
+                  onclick={() => !isDragging && selectSession(session)}
+                >
+                  <div class="session-title">
+                    {session.workout_summary || "Workout Scheduled"}
+                  </div>
+                  <div
+                    class="session-status"
+                    style="color: {getStatusColor(session.status)}"
+                  >
+                    {getStatusLabel(session.status)}
+                  </div>
+                </div>
+              {/each}
             </div>
           {:else}
             <div class="rest-day">Rest Day</div>
@@ -708,9 +748,19 @@
     color: #667eea;
   }
 
+  .sessions-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
   .session-summary {
     border-left: 4px solid #667eea;
     padding-left: 0.75rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 4px;
   }
 
   .draggable-session {

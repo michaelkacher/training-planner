@@ -188,14 +188,7 @@ export function registerTrainingPlanRoutes(fastify: FastifyInstance) {
           return reply.status(404).send({ error: 'Training plan not found' });
         }
 
-        // Deactivate all other plans for this athlete
-        mockTrainingPlans.forEach(p => {
-          if (p.athlete_id === plan.athlete_id) {
-            p.is_active = false;
-          }
-        });
-
-        // Activate this plan
+        // Activate this plan (allowing multiple active plans)
         plan.is_active = true;
         plan.updated_at = new Date().toISOString();
 
@@ -225,29 +218,7 @@ export function registerTrainingPlanRoutes(fastify: FastifyInstance) {
       }
 
       // Database mode
-      // First, get the plan to find the athlete_id
-      const { data: plan, error: getPlanError } = await supabase
-        .from('training_plans')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (getPlanError || !plan) {
-        return reply.status(404).send({ error: 'Training plan not found' });
-      }
-
-      // Deactivate all other plans for this athlete
-      const { error: deactivateError } = await supabase
-        .from('training_plans')
-        .update({ is_active: false, updated_at: new Date().toISOString() })
-        .eq('athlete_id', plan.athlete_id)
-        .neq('id', id);
-
-      if (deactivateError) {
-        return reply.status(500).send({ error: 'Failed to deactivate other plans' });
-      }
-
-      // Activate this plan
+      // Activate this plan (allowing multiple active plans)
       const { data: activatedPlan, error: activateError } = await supabase
         .from('training_plans')
         .update({ is_active: true, updated_at: new Date().toISOString() })
