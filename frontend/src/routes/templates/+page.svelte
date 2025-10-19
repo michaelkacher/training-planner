@@ -247,13 +247,13 @@
   }
 
   h1 {
-    color: #667eea;
+    color: white;
     font-size: 2.5rem;
     margin: 0 0 0.5rem 0;
   }
 
   .subtitle {
-    color: #666;
+    color: black;
     font-size: 1.1rem;
     margin: 0;
   }

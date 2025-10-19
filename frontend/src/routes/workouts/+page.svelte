@@ -312,7 +312,7 @@
   }
 
   h1 {
-    color: #667eea;
+    color: white;
     font-size: 2.5rem;
     margin: 0;
   }
