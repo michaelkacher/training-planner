@@ -1,10 +1,14 @@
 import { FastifyInstance } from 'fastify';
 import { registerWorkoutRoutes } from './workouts.js';
 import { registerTrainingPlanRoutes } from './training-plans.js';
+import { registerAuthRoutes } from './auth.js';
 
 export function registerRoutes(fastify: FastifyInstance) {
   // API version prefix
   fastify.register(async (app) => {
+    // Register auth routes (no authentication required)
+    registerAuthRoutes(app);
+
     // Register workout routes
     registerWorkoutRoutes(app);
 

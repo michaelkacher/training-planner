@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import jwt from '@fastify/jwt';
 import dotenv from 'dotenv';
 import { registerRoutes } from './routes/index.js';
 
@@ -15,6 +16,11 @@ const fastify = Fastify({
       }
     }
   }
+});
+
+// Register JWT
+await fastify.register(jwt, {
+  secret: process.env.JWT_SECRET || 'your-secret-key-change-this-in-production'
 });
 
 // Register CORS

@@ -28,7 +28,12 @@
       "Bash(curl -X POST http://localhost:3000/api/v1/training-plans/mock-1760894081440/activate -H \"Content-Type: application/json\")",
       "Bash(curl -X POST http://localhost:3000/api/v1/training-plans/mock-1760894081440/activate -H \"Content-Type: application/json\" -d \"{}\")",
       "Bash(curl http://localhost:3000/api/v1/training-plans)",
-      "Bash(curl http://localhost:3000/api/v1/training-plans?athlete_id=default-athlete-123)"
+      "Bash(curl http://localhost:3000/api/v1/training-plans?athlete_id=default-athlete-123)",
+      "Bash(npm install bcrypt jsonwebtoken @fastify/jwt @types/bcrypt @types/jsonwebtoken)",
+      "Bash(curl -X POST http://localhost:3000/api/v1/auth/register -H \"Content-Type: application/json\" -d \"{\"\"email\"\":\"\"test@example.com\"\",\"\"password\"\":\"\"password123\"\",\"\"name\"\":\"\"Test User\"\"}\")",
+      "Bash(curl -X POST http://localhost:3000/api/v1/auth/login -H \"Content-Type: application/json\" -d \"{\"\"email\"\":\"\"test@example.com\"\",\"\"password\"\":\"\"password123\"\"}\")",
+      "Bash(curl http://localhost:3000/api/v1/auth/me -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJtb2NrLXVzZXItMTc2MDkwNjI1OTEyMCIsImlhdCI6MTc2MDkwNjI2Nn0.4anXGLL3rP-swdIuZld6_sVZTP-8dtj6cExElJBU0JY\")",
+      "Bash(curl http://localhost:3000/api/v1/auth/me)"
     ],
     "deny": [],
     "ask": []
