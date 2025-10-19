@@ -3,18 +3,99 @@
   import type { TrainingTemplate } from '$lib/data/training-templates';
 
   let selectedTemplate = $state<TrainingTemplate | null>(null);
+  let isStarting = $state(false);
+  let errorMessage = $state<string | null>(null);
+  let successMessage = $state<string | null>(null);
+
+  // For now, using a hardcoded athlete ID. In a real app, this would come from authentication
+  const ATHLETE_ID = 'default-athlete-123';
 
   function selectTemplate(template: TrainingTemplate) {
     selectedTemplate = template;
+    errorMessage = null;
+    successMessage = null;
   }
 
   function closeModal() {
     selectedTemplate = null;
+    errorMessage = null;
+    successMessage = null;
   }
 
-  function startFromTemplate(template: TrainingTemplate) {
-    // TODO: Implement creating workouts from template
-    alert(`Starting from template: ${template.title}\n\nThis will create ${template.phases.length} phases with multiple workouts. Coming soon!`);
+  async function startFromTemplate(template: TrainingTemplate) {
+    isStarting = true;
+    errorMessage = null;
+    successMessage = null;
+
+    try {
+      // Calculate start and end dates
+      const startDate = new Date();
+      const durationMatch = template.duration.match(/(\d+)\s*weeks?/i);
+      const weeks = durationMatch ? parseInt(durationMatch[1]) : 4;
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + (weeks * 7));
+
+      // Determine phase type based on template level
+      let phaseType: 'Off-Season' | 'Pre-Season' | 'Competition' | 'Recovery' = 'Off-Season';
+      if (template.title.includes('Competition')) {
+        phaseType = 'Competition';
+      } else if (template.title.includes('Pre-Season')) {
+        phaseType = 'Pre-Season';
+      }
+
+      // Create training plan
+      const planData = {
+        athlete_id: ATHLETE_ID,
+        name: template.title,
+        description: template.description,
+        phase_type: phaseType,
+        start_date: startDate.toISOString().split('T')[0],
+        end_date: endDate.toISOString().split('T')[0],
+        template_id: template.id
+      };
+
+      const response = await fetch('http://localhost:3000/api/v1/training-plans', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(planData)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create training plan');
+      }
+
+      const createdPlan = await response.json();
+
+      // Activate the plan
+      const activateResponse = await fetch(`http://localhost:3000/api/v1/training-plans/${createdPlan.id}/activate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+      });
+
+      if (!activateResponse.ok) {
+        throw new Error('Failed to activate training plan');
+      }
+
+      successMessage = `Successfully started "${template.title}"! Your plan is now active. Redirecting to My Plans...`;
+
+      // Close modal and redirect after 2 seconds
+      setTimeout(() => {
+        closeModal();
+        window.location.href = '/plans';
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error starting training plan:', error);
+      errorMessage = error instanceof Error ? error.message : 'An error occurred';
+    } finally {
+      isStarting = false;
+    }
   }
 </script>
 
@@ -24,7 +105,10 @@
       <h1>Training Plan Templates</h1>
       <p class="subtitle">Start from a pre-configured plan designed by experts</p>
     </div>
-    <a href="/workouts" class="btn-secondary">My Custom Workouts →</a>
+    <div class="header-actions">
+      <a href="/plans" class="btn-primary">My Plans</a>
+      <a href="/workouts" class="btn-secondary">My Workouts</a>
+    </div>
   </header>
 
   <div class="templates-grid">
@@ -126,9 +210,15 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn-secondary" onclick={closeModal}>Close</button>
-        <button class="btn-primary" onclick={() => startFromTemplate(selectedTemplate)}>
-          Start This Program
+        {#if errorMessage}
+          <div class="error-message">{errorMessage}</div>
+        {/if}
+        {#if successMessage}
+          <div class="success-message">{successMessage}</div>
+        {/if}
+        <button class="btn-secondary" onclick={closeModal} disabled={isStarting}>Close</button>
+        <button class="btn-primary" onclick={() => startFromTemplate(selectedTemplate)} disabled={isStarting}>
+          {isStarting ? 'Starting...' : 'Start This Program'}
         </button>
       </div>
     </div>
@@ -147,6 +237,13 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 3rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 1rem;
   }
 
   h1 {
@@ -501,9 +598,34 @@
     display: flex;
     gap: 1rem;
     justify-content: flex-end;
+    align-items: center;
     position: sticky;
     bottom: 0;
     background: white;
+    flex-wrap: wrap;
+  }
+
+  .error-message {
+    flex: 1 1 100%;
+    padding: 0.75rem 1rem;
+    background: #fee;
+    color: #c33;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+
+  .success-message {
+    flex: 1 1 100%;
+    padding: 0.75rem 1rem;
+    background: #efe;
+    color: #3c3;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+
+  button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   @media (max-width: 768px) {

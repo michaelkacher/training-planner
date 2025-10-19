@@ -22,7 +22,13 @@
       "Bash(curl http://localhost:3000/api/v1/workouts)",
       "Bash(powershell -ExecutionPolicy Bypass -File kill-ports.ps1)",
       "Bash(awk '{print $5}')",
-      "Bash(xargs -r -I {} taskkill //F //PID {})"
+      "Bash(xargs -r -I {} taskkill //F //PID {})",
+      "Bash(findstr \":5173 \")",
+      "Bash(curl -X POST http://localhost:3000/api/v1/training-plans -H \"Content-Type: application/json\" -d \"{\"\"athlete_id\"\":\"\"test-athlete\"\",\"\"name\"\":\"\"Test Plan\"\",\"\"description\"\":\"\"Test description\"\",\"\"phase_type\"\":\"\"Off-Season\"\",\"\"start_date\"\":\"\"2025-10-19\"\",\"\"end_date\"\":\"\"2025-11-16\"\"}\")",
+      "Bash(curl -X POST http://localhost:3000/api/v1/training-plans/mock-1760894081440/activate -H \"Content-Type: application/json\")",
+      "Bash(curl -X POST http://localhost:3000/api/v1/training-plans/mock-1760894081440/activate -H \"Content-Type: application/json\" -d \"{}\")",
+      "Bash(curl http://localhost:3000/api/v1/training-plans)",
+      "Bash(curl http://localhost:3000/api/v1/training-plans?athlete_id=default-athlete-123)"
     ],
     "deny": [],
     "ask": []

@@ -34,9 +34,16 @@
     </section>
 
     <section class="features">
+      <a href="/plans" class="feature-card">
+        <div class="icon">🎯</div>
+        <h3>My Training Plans</h3>
+        <p>View and manage your active and past training programs</p>
+        <span class="cta">View Plans →</span>
+      </a>
+
       <a href="/workouts" class="feature-card">
         <div class="icon">📋</div>
-        <h3>Custom Training Plans</h3>
+        <h3>Custom Workouts</h3>
         <p>Create workouts tailored to your position and goals</p>
         <span class="cta">Get Started →</span>
       </a>
@@ -45,13 +52,6 @@
         <div class="icon">📅</div>
         <h3>Smart Calendar</h3>
         <p>Drag-and-drop scheduling with automatic reminders</p>
-        <span class="cta-disabled">Coming Soon</span>
-      </div>
-
-      <div class="feature-card">
-        <div class="icon">📊</div>
-        <h3>Track Progress</h3>
-        <p>Monitor your performance and stay accountable</p>
         <span class="cta-disabled">Coming Soon</span>
       </div>
     </section>
