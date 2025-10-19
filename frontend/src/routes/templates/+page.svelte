@@ -6,33 +6,46 @@
   let isStarting = $state(false);
   let errorMessage = $state<string | null>(null);
   let successMessage = $state<string | null>(null);
+  let startDate = $state<string>('');
 
   // For now, using a hardcoded athlete ID. In a real app, this would come from authentication
   const ATHLETE_ID = 'default-athlete-123';
 
+  function getTodayString(): string {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  }
+
   function selectTemplate(template: TrainingTemplate) {
     selectedTemplate = template;
+    startDate = getTodayString();
     errorMessage = null;
     successMessage = null;
   }
 
   function closeModal() {
     selectedTemplate = null;
+    startDate = '';
     errorMessage = null;
     successMessage = null;
   }
 
   async function startFromTemplate(template: TrainingTemplate) {
+    if (!startDate) {
+      errorMessage = 'Please select a start date';
+      return;
+    }
+
     isStarting = true;
     errorMessage = null;
     successMessage = null;
 
     try {
       // Calculate start and end dates
-      const startDate = new Date();
+      const planStartDate = new Date(startDate);
       const durationMatch = template.duration.match(/(\d+)\s*weeks?/i);
       const weeks = durationMatch ? parseInt(durationMatch[1]) : 4;
-      const endDate = new Date();
+      const endDate = new Date(planStartDate);
       endDate.setDate(endDate.getDate() + (weeks * 7));
 
       // Determine phase type based on template level
@@ -49,7 +62,7 @@
         name: template.title,
         description: template.description,
         phase_type: phaseType,
-        start_date: startDate.toISOString().split('T')[0],
+        start_date: planStartDate.toISOString().split('T')[0],
         end_date: endDate.toISOString().split('T')[0],
         template_id: template.id
       };
@@ -170,6 +183,40 @@
 
         <p class="template-description">{selectedTemplate.description}</p>
 
+        <div class="start-date-section">
+          <h3>When do you want to start?</h3>
+          <div class="date-selector">
+            <label for="start-date">Start Date</label>
+            <input
+              id="start-date"
+              type="date"
+              bind:value={startDate}
+              min={getTodayString()}
+              required
+            />
+          </div>
+
+          {#if startDate}
+            {@const planStartDate = new Date(startDate)}
+            {@const durationMatch = selectedTemplate.duration.match(/(\d+)\s*weeks?/i)}
+            {@const weeks = durationMatch ? parseInt(durationMatch[1]) : 4}
+            {@const durationDays = weeks * 7}
+            {@const endDate = new Date(planStartDate)}
+            {endDate.setDate(endDate.getDate() + durationDays)}
+
+            <div class="date-preview">
+              <div class="preview-item">
+                <span class="preview-label">Duration:</span>
+                <span class="preview-value">{weeks} weeks ({durationDays} days)</span>
+              </div>
+              <div class="preview-item">
+                <span class="preview-label">End Date:</span>
+                <span class="preview-value">{endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+              </div>
+            </div>
+          {/if}
+        </div>
+
         <div class="phases-section">
           {#each selectedTemplate.phases as phase}
             <div class="phase">
@@ -217,7 +264,7 @@
           <div class="success-message">{successMessage}</div>
         {/if}
         <button class="btn-secondary" onclick={closeModal} disabled={isStarting}>Close</button>
-        <button class="btn-primary" onclick={() => startFromTemplate(selectedTemplate)} disabled={isStarting}>
+        <button class="btn-primary" onclick={() => startFromTemplate(selectedTemplate)} disabled={!startDate || isStarting}>
           {isStarting ? 'Starting...' : 'Start This Program'}
         </button>
       </div>
@@ -590,6 +637,75 @@
     color: #666;
     font-size: 0.85rem;
     font-style: italic;
+  }
+
+  .start-date-section {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 2px solid #667eea;
+  }
+
+  .start-date-section h3 {
+    color: #667eea;
+    margin: 0 0 1rem 0;
+    font-size: 1.2rem;
+  }
+
+  .date-selector {
+    margin-bottom: 1.5rem;
+  }
+
+  .date-selector label {
+    display: block;
+    color: #333;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+  }
+
+  .date-selector input[type="date"] {
+    width: 100%;
+    padding: 0.875rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+  }
+
+  .date-selector input[type="date"]:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+
+  .date-preview {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  .preview-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+  }
+
+  .preview-item:not(:last-child) {
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .preview-label {
+    color: #666;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .preview-value {
+    color: #667eea;
+    font-weight: 700;
+    font-size: 1rem;
   }
 
   .modal-footer {

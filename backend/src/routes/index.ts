@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { registerWorkoutRoutes } from './workouts.js';
 import { registerTrainingPlanRoutes } from './training-plans.js';
 import { registerAuthRoutes } from './auth.js';
+import { registerWorkoutSessionRoutes } from './workout-sessions.js';
 
 export function registerRoutes(fastify: FastifyInstance) {
   // API version prefix
@@ -14,6 +15,9 @@ export function registerRoutes(fastify: FastifyInstance) {
 
     // Register training plan routes
     registerTrainingPlanRoutes(app);
+
+    // Register workout session routes
+    registerWorkoutSessionRoutes(app);
 
     // Placeholder routes - will be implemented later
     app.get('/athletes', async (request, reply) => {

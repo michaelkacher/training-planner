@@ -63,3 +63,26 @@ export interface CreateTrainingPlanDTO {
   start_date?: string;
   end_date?: string;
 }
+
+export type SessionStatus = 'scheduled' | 'completed' | 'partial' | 'skipped';
+
+export interface WorkoutSession {
+  id: string;
+  athlete_id: string;
+  training_plan_id: string;
+  workout_id?: string;
+  scheduled_date: string;
+  status: SessionStatus;
+  notes?: string;
+  workout_summary?: string;
+  created_at: string;
+  updated_at: string;
+  workout?: Workout;
+}
+
+export interface CreateWorkoutSessionDTO {
+  training_plan_id: string;
+  workout_id?: string;
+  scheduled_date: string;
+  workout_summary?: string;
+}

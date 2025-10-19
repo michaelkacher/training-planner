@@ -9,6 +9,10 @@
   let isLoading = $state(true);
   let errorMessage = $state<string | null>(null);
   let selectedPlan = $state<TrainingPlan | null>(null);
+  let showActivateModal = $state(false);
+  let planToActivate = $state<TrainingPlan | null>(null);
+  let activationStartDate = $state<string>('');
+  let isActivating = $state(false);
 
   onMount(async () => {
     await fetchPlans();
@@ -68,6 +72,23 @@
     selectedPlan = null;
   }
 
+  function getTodayString(): string {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  }
+
+  function showActivateDialog(plan: TrainingPlan) {
+    planToActivate = plan;
+    activationStartDate = getTodayString();
+    showActivateModal = true;
+  }
+
+  function closeActivateModal() {
+    showActivateModal = false;
+    planToActivate = null;
+    activationStartDate = '';
+  }
+
   async function deactivatePlan(planId: string) {
     try {
       const response = await fetch(`http://localhost:3000/api/v1/training-plans/${planId}`, {
@@ -90,9 +111,46 @@
     }
   }
 
-  async function activatePlan(planId: string) {
+  async function activatePlanWithDate() {
+    if (!planToActivate || !activationStartDate) {
+      errorMessage = 'Please select a start date';
+      return;
+    }
+
+    isActivating = true;
+
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/training-plans/${planId}/activate`, {
+      // Calculate end date based on original plan duration
+      const originalStart = planToActivate.start_date ? new Date(planToActivate.start_date) : null;
+      const originalEnd = planToActivate.end_date ? new Date(planToActivate.end_date) : null;
+
+      let durationDays = 28; // Default 4 weeks
+      if (originalStart && originalEnd) {
+        durationDays = Math.ceil((originalEnd.getTime() - originalStart.getTime()) / (1000 * 60 * 60 * 24));
+      }
+
+      const startDate = new Date(activationStartDate);
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + durationDays);
+
+      // Update the plan with new dates and activate it
+      const updateResponse = await fetch(`http://localhost:3000/api/v1/training-plans/${planToActivate.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          start_date: startDate.toISOString().split('T')[0],
+          end_date: endDate.toISOString().split('T')[0]
+        })
+      });
+
+      if (!updateResponse.ok) {
+        throw new Error('Failed to update plan dates');
+      }
+
+      // Activate the plan
+      const activateResponse = await fetch(`http://localhost:3000/api/v1/training-plans/${planToActivate.id}/activate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -100,15 +158,18 @@
         body: JSON.stringify({})
       });
 
-      if (!response.ok) {
+      if (!activateResponse.ok) {
         throw new Error('Failed to activate plan');
       }
 
       await fetchPlans();
+      closeActivateModal();
       closeModal();
     } catch (error) {
       console.error('Error activating plan:', error);
       errorMessage = error instanceof Error ? error.message : 'An error occurred';
+    } finally {
+      isActivating = false;
     }
   }
 
@@ -340,7 +401,7 @@
             Deactivate Plan
           </button>
         {:else}
-          <button class="btn-primary" onclick={() => activatePlan(selectedPlan.id)}>
+          <button class="btn-primary" onclick={() => showActivateDialog(selectedPlan)}>
             Activate Plan
           </button>
         {/if}
@@ -348,6 +409,63 @@
           Delete Plan
         </button>
         <button class="btn-secondary" onclick={closeModal}>Close</button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+{#if showActivateModal && planToActivate}
+  <div class="modal-overlay" onclick={closeActivateModal}>
+    <div class="activate-modal" onclick={(e) => e.stopPropagation()}>
+      <button class="modal-close" onclick={closeActivateModal}>×</button>
+
+      <div class="activate-modal-header">
+        <h2>Activate Training Plan</h2>
+        <p class="activate-subtitle">{planToActivate.name}</p>
+      </div>
+
+      <div class="activate-modal-body">
+        <p class="activate-info">Choose when you'd like to start this training plan. The end date will be calculated based on the plan's duration.</p>
+
+        <div class="date-selector">
+          <label for="start-date">Start Date</label>
+          <input
+            id="start-date"
+            type="date"
+            bind:value={activationStartDate}
+            min={getTodayString()}
+            required
+          />
+        </div>
+
+        {#if activationStartDate}
+          {@const startDate = new Date(activationStartDate)}
+          {@const originalStart = planToActivate.start_date ? new Date(planToActivate.start_date) : null}
+          {@const originalEnd = planToActivate.end_date ? new Date(planToActivate.end_date) : null}
+          {@const durationDays = originalStart && originalEnd ? Math.ceil((originalEnd.getTime() - originalStart.getTime()) / (1000 * 60 * 60 * 24)) : 28}
+          {@const endDate = new Date(startDate)}
+          {endDate.setDate(endDate.getDate() + durationDays)}
+
+          <div class="date-preview">
+            <div class="preview-item">
+              <span class="preview-label">Plan Duration:</span>
+              <span class="preview-value">{durationDays} days ({Math.ceil(durationDays / 7)} weeks)</span>
+            </div>
+            <div class="preview-item">
+              <span class="preview-label">End Date:</span>
+              <span class="preview-value">{formatDate(endDate.toISOString().split('T')[0])}</span>
+            </div>
+          </div>
+        {/if}
+      </div>
+
+      <div class="activate-modal-footer">
+        <button class="btn-secondary" onclick={closeActivateModal} disabled={isActivating}>
+          Cancel
+        </button>
+        <button class="btn-primary" onclick={activatePlanWithDate} disabled={!activationStartDate || isActivating}>
+          {isActivating ? 'Activating...' : 'Activate Plan'}
+        </button>
       </div>
     </div>
   </div>
@@ -827,6 +945,114 @@
     position: sticky;
     bottom: 0;
     background: white;
+  }
+
+  /* Activation Modal Styles */
+  .activate-modal {
+    background: white;
+    border-radius: 16px;
+    max-width: 500px;
+    width: 100%;
+    position: relative;
+  }
+
+  .activate-modal-header {
+    padding: 2rem 2rem 1rem 2rem;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .activate-modal-header h2 {
+    color: #333;
+    font-size: 1.8rem;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .activate-subtitle {
+    color: #667eea;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .activate-modal-body {
+    padding: 2rem;
+  }
+
+  .activate-info {
+    color: #666;
+    line-height: 1.6;
+    margin: 0 0 2rem 0;
+  }
+
+  .date-selector {
+    margin-bottom: 2rem;
+  }
+
+  .date-selector label {
+    display: block;
+    color: #333;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+  }
+
+  .date-selector input[type="date"] {
+    width: 100%;
+    padding: 0.875rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+  }
+
+  .date-selector input[type="date"]:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+
+  .date-preview {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ebf0 100%);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 2px solid #667eea;
+  }
+
+  .preview-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+  }
+
+  .preview-item:not(:last-child) {
+    border-bottom: 1px solid #d0d5dd;
+  }
+
+  .preview-label {
+    color: #666;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .preview-value {
+    color: #667eea;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .activate-modal-footer {
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    background: white;
+    border-radius: 0 0 16px 16px;
+  }
+
+  .activate-modal-footer button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   @media (max-width: 768px) {

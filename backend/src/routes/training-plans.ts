@@ -1,6 +1,8 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { supabase, isDbConnected } from '../config/supabase.js';
-import type { TrainingPlan, CreateTrainingPlanDTO } from '../types/index.js';
+import type { TrainingPlan, CreateTrainingPlanDTO, WorkoutSession } from '../types/index.js';
+import { generateWorkoutSessions } from '../utils/session-generator.js';
+import { mockSessions } from '../shared/mock-data.js';
 
 // In-memory storage for mock mode
 let mockTrainingPlans: TrainingPlan[] = [];
@@ -196,6 +198,27 @@ export function registerTrainingPlanRoutes(fastify: FastifyInstance) {
         // Activate this plan
         plan.is_active = true;
         plan.updated_at = new Date().toISOString();
+
+        // Generate workout sessions for this plan
+        if (plan.start_date && plan.end_date) {
+          const sessions = generateWorkoutSessions(
+            plan.id,
+            plan.athlete_id,
+            new Date(plan.start_date),
+            new Date(plan.end_date)
+          );
+
+          // Add sessions to mock storage
+          sessions.forEach(session => {
+            const fullSession: WorkoutSession = {
+              ...session,
+              id: `mock-session-${Date.now()}-${Math.random()}`,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+            mockSessions.set(fullSession.id, fullSession);
+          });
+        }
 
         return reply.send(plan);
       }
