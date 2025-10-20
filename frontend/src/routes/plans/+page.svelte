@@ -81,7 +81,23 @@
 
   function getTodayString(): string {
     const today = new Date();
-    return today.toISOString().split("T")[0];
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  function formatDateForAPI(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  function parseLocalDate(dateString: string): Date {
+    // Parse date string as local time, not UTC
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
   }
 
   function showActivateDialog(plan: TrainingPlan) {
@@ -133,10 +149,10 @@
     try {
       // Calculate end date based on original plan duration
       const originalStart = planToActivate.start_date
-        ? new Date(planToActivate.start_date)
+        ? parseLocalDate(planToActivate.start_date)
         : null;
       const originalEnd = planToActivate.end_date
-        ? new Date(planToActivate.end_date)
+        ? parseLocalDate(planToActivate.end_date)
         : null;
 
       let durationDays = 28; // Default 4 weeks
@@ -147,7 +163,7 @@
         );
       }
 
-      const startDate = new Date(activationStartDate);
+      const startDate = parseLocalDate(activationStartDate);
       const endDate = new Date(startDate);
       endDate.setDate(endDate.getDate() + durationDays);
 
@@ -160,8 +176,8 @@
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            start_date: startDate.toISOString().split("T")[0],
-            end_date: endDate.toISOString().split("T")[0],
+            start_date: formatDateForAPI(startDate),
+            end_date: formatDateForAPI(endDate),
           }),
         }
       );
@@ -540,7 +556,7 @@
             <div class="preview-item">
               <span class="preview-label">End Date:</span>
               <span class="preview-value"
-                >{formatDate(endDate.toISOString().split("T")[0])}</span
+                >{formatDate(formatDateForAPI(endDate))}</span
               >
             </div>
           </div>

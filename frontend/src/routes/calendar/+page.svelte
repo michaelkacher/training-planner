@@ -92,7 +92,10 @@
   }
 
   function formatDateForAPI(date: Date): string {
-    return date.toISOString().split("T")[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   function formatDate(date: Date): string {
@@ -101,6 +104,12 @@
       day: "numeric",
       year: "numeric",
     });
+  }
+
+  function parseLocalDate(dateString: string): Date {
+    // Parse date string as local time, not UTC
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
   }
 
   function getWeekDays(): Date[] {
@@ -336,7 +345,7 @@
       const dateStr = dayCard.getAttribute("data-date");
       if (dateStr && dateStr !== draggedSession.scheduled_date) {
         // Verify target is within current week
-        const targetDate = new Date(dateStr);
+        const targetDate = parseLocalDate(dateStr);
         const weekEnd = new Date(currentWeekStart);
         weekEnd.setDate(currentWeekStart.getDate() + 6);
 
@@ -494,7 +503,7 @@
           <div class="detail-section">
             <div class="detail-label">Date</div>
             <div class="detail-value">
-              {formatDate(new Date(selectedSession.scheduled_date))}
+              {formatDate(parseLocalDate(selectedSession.scheduled_date))}
             </div>
           </div>
 

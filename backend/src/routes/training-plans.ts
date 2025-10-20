@@ -4,6 +4,12 @@ import type { TrainingPlan, CreateTrainingPlanDTO, WorkoutSession } from '../typ
 import { generateWorkoutSessions } from '../utils/session-generator.js';
 import { mockSessions } from '../shared/mock-data.js';
 
+// Helper function to parse date strings as local time, not UTC
+function parseLocalDate(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 // In-memory storage for mock mode
 let mockTrainingPlans: TrainingPlan[] = [];
 
@@ -197,16 +203,16 @@ export function registerTrainingPlanRoutes(fastify: FastifyInstance) {
           const sessions = generateWorkoutSessions(
             plan.id,
             plan.athlete_id,
-            new Date(plan.start_date),
-            new Date(plan.end_date),
+            parseLocalDate(plan.start_date),
+            parseLocalDate(plan.end_date),
             plan.phases // Pass phases to generator
           );
 
-          // Add sessions to mock storage
-          sessions.forEach(session => {
+          // Add sessions to mock storage with unique IDs
+          sessions.forEach((session, index) => {
             const fullSession: WorkoutSession = {
               ...session,
-              id: `mock-session-${Date.now()}-${Math.random()}`,
+              id: `mock-session-${plan.id}-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             };

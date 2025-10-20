@@ -13,7 +13,23 @@
 
   function getTodayString(): string {
     const today = new Date();
-    return today.toISOString().split("T")[0];
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  function formatDateForAPI(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  function parseLocalDate(dateString: string): Date {
+    // Parse date string as local time, not UTC
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
   }
 
   function selectTemplate(template: TrainingTemplate) {
@@ -42,7 +58,7 @@
 
     try {
       // Calculate start and end dates
-      const planStartDate = new Date(startDate);
+      const planStartDate = parseLocalDate(startDate);
       const durationMatch = template.duration.match(/(\d+)\s*weeks?/i);
       const weeks = durationMatch ? parseInt(durationMatch[1]) : 4;
       const endDate = new Date(planStartDate);
@@ -63,8 +79,8 @@
         name: template.title,
         description: template.description,
         phase_type: phaseType,
-        start_date: planStartDate.toISOString().split("T")[0],
-        end_date: endDate.toISOString().split("T")[0],
+        start_date: formatDateForAPI(planStartDate),
+        end_date: formatDateForAPI(endDate),
         template_id: template.id,
         phases: template.phases, // Include phase data with exercises
       };
@@ -209,7 +225,7 @@
           </div>
 
           {#if startDate}
-            {@const planStartDate = new Date(startDate)}
+            {@const planStartDate = parseLocalDate(startDate)}
             {@const durationMatch =
               selectedTemplate.duration.match(/(\d+)\s*weeks?/i)}
             {@const weeks = durationMatch ? parseInt(durationMatch[1]) : 4}
