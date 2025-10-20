@@ -154,28 +154,20 @@
       .map((selected, index) => selected ? index : -1)
       .filter(index => index !== -1);
 
-    // Distribute exercises across selected days
-    const exercisesPerDay = Math.ceil(selectedExercises.length / selectedDayIndices.length);
-
-    selectedDayIndices.forEach((dayIndex, i) => {
-      const startIdx = i * exercisesPerDay;
-      const endIdx = Math.min(startIdx + exercisesPerDay, selectedExercises.length);
-      const dayExercises = selectedExercises.slice(startIdx, endIdx);
-
-      if (dayExercises.length > 0) {
-        workoutDays.push({
-          day: dayIndex + 1,
-          title: `${selectedSkill!.title} - ${daysOfWeek[dayIndex]}`,
-          exercises: dayExercises.map(ex => ({
-            name: ex.name,
-            sets: ex.sets,
-            reps: ex.reps,
-            duration: ex.duration,
-            focus: selectedSkill!.title,
-            notes: ex.notes
-          }))
-        });
-      }
+    // Give all selected exercises to each workout day
+    selectedDayIndices.forEach((dayIndex) => {
+      workoutDays.push({
+        day: dayIndex,
+        title: `${selectedSkill!.title} - ${daysOfWeek[dayIndex]}`,
+        exercises: selectedExercises.map(ex => ({
+          name: ex.name,
+          sets: ex.sets,
+          reps: ex.reps,
+          duration: ex.duration,
+          focus: selectedSkill!.title,
+          notes: ex.notes
+        }))
+      });
     });
 
     return workoutDays;

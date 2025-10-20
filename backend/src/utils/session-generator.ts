@@ -31,42 +31,49 @@ export function generateWorkoutSessions(
     return generateDefaultSchedule(trainingPlanId, athleteId, startDate, endDate);
   }
 
-  // Calculate total days in plan
+  // Initialize date at start of plan
   const currentDate = new Date(startDate);
   currentDate.setHours(0, 0, 0, 0);
 
   const finalDate = new Date(endDate);
   finalDate.setHours(23, 59, 59, 999);
 
-  const totalDays = Math.ceil((finalDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  // Generate sessions for each week, scheduling workouts on their specified days
+  while (currentDate <= finalDate) {
+    // For each workout day, find the next occurrence of that day of week
+    for (const workoutDay of allWorkoutDays) {
+      const targetDayOfWeek = workoutDay.day; // 0 = Sunday, 1 = Monday, etc.
 
-  // Calculate how many days between workouts
-  const daysPerWorkout = Math.max(1, Math.floor(totalDays / allWorkoutDays.length));
+      // Find the next occurrence of this day of week within the current week
+      const tempDate = new Date(currentDate);
+      const currentDayOfWeek = tempDate.getDay();
 
-  // Generate sessions by distributing workout days across the date range
-  let workoutIndex = 0;
+      // Calculate days to add to reach the target day of week
+      let daysToAdd = targetDayOfWeek - currentDayOfWeek;
+      if (daysToAdd < 0) {
+        daysToAdd += 7; // Move to next week if day has already passed this week
+      }
 
-  while (currentDate <= finalDate && workoutIndex < allWorkoutDays.length) {
-    const workoutDay = allWorkoutDays[workoutIndex];
+      tempDate.setDate(tempDate.getDate() + daysToAdd);
 
-    // Create session with full exercise details
-    sessions.push({
-      athlete_id: athleteId,
-      training_plan_id: trainingPlanId,
-      workout_id: undefined,
-      scheduled_date: formatDateForAPI(currentDate),
-      status: 'scheduled',
-      notes: undefined,
-      workout_summary: workoutDay.title,
-      workout_title: workoutDay.title,
-      exercises: workoutDay.exercises
-    });
+      // Only create session if the date is within the plan's date range
+      if (tempDate >= startDate && tempDate <= finalDate) {
+        sessions.push({
+          athlete_id: athleteId,
+          training_plan_id: trainingPlanId,
+          workout_id: undefined,
+          scheduled_date: formatDateForAPI(tempDate),
+          status: 'scheduled',
+          notes: undefined,
+          workout_summary: workoutDay.title,
+          workout_title: workoutDay.title,
+          exercises: workoutDay.exercises
+        });
+      }
+    }
 
-    // Move to next workout
-    workoutIndex++;
-
-    // Advance date by calculated interval
-    currentDate.setDate(currentDate.getDate() + daysPerWorkout);
+    // Move to next week
+    currentDate.setDate(currentDate.getDate() + 7);
   }
 
   return sessions;
