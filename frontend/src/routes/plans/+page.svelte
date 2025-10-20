@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import type { TrainingPlan } from '$lib/types';
+  import { onMount } from "svelte";
+  import type { TrainingPlan } from "$lib/types";
 
   // For now, using a hardcoded athlete ID. In a real app, this would come from authentication
-  const ATHLETE_ID = 'default-athlete-123';
+  const ATHLETE_ID = "default-athlete-123";
 
   let plans = $state<TrainingPlan[]>([]);
   let isLoading = $state(true);
@@ -11,7 +11,7 @@
   let selectedPlan = $state<TrainingPlan | null>(null);
   let showActivateModal = $state(false);
   let planToActivate = $state<TrainingPlan | null>(null);
-  let activationStartDate = $state<string>('');
+  let activationStartDate = $state<string>("");
   let isActivating = $state(false);
 
   onMount(async () => {
@@ -23,25 +23,32 @@
     errorMessage = null;
 
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/training-plans?athlete_id=${ATHLETE_ID}`);
+      const response = await fetch(
+        `http://localhost:3000/api/v1/training-plans?athlete_id=${ATHLETE_ID}`
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to fetch training plans');
+        throw new Error("Failed to fetch training plans");
       }
 
       plans = await response.json();
     } catch (error) {
-      console.error('Error fetching plans:', error);
-      errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      console.error("Error fetching plans:", error);
+      errorMessage =
+        error instanceof Error ? error.message : "An error occurred";
     } finally {
       isLoading = false;
     }
   }
 
   function formatDate(dateString?: string): string {
-    if (!dateString) return 'Not set';
+    if (!dateString) return "Not set";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   }
 
   function getDaysRemaining(endDate?: string): number | null {
@@ -74,7 +81,7 @@
 
   function getTodayString(): string {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    return today.toISOString().split("T")[0];
   }
 
   function showActivateDialog(plan: TrainingPlan) {
@@ -86,34 +93,38 @@
   function closeActivateModal() {
     showActivateModal = false;
     planToActivate = null;
-    activationStartDate = '';
+    activationStartDate = "";
   }
 
   async function deactivatePlan(planId: string) {
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/training-plans/${planId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ is_active: false })
-      });
+      const response = await fetch(
+        `http://localhost:3000/api/v1/training-plans/${planId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ is_active: false }),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to deactivate plan');
+        throw new Error("Failed to deactivate plan");
       }
 
       await fetchPlans();
       closeModal();
     } catch (error) {
-      console.error('Error deactivating plan:', error);
-      errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      console.error("Error deactivating plan:", error);
+      errorMessage =
+        error instanceof Error ? error.message : "An error occurred";
     }
   }
 
   async function activatePlanWithDate() {
     if (!planToActivate || !activationStartDate) {
-      errorMessage = 'Please select a start date';
+      errorMessage = "Please select a start date";
       return;
     }
 
@@ -121,12 +132,19 @@
 
     try {
       // Calculate end date based on original plan duration
-      const originalStart = planToActivate.start_date ? new Date(planToActivate.start_date) : null;
-      const originalEnd = planToActivate.end_date ? new Date(planToActivate.end_date) : null;
+      const originalStart = planToActivate.start_date
+        ? new Date(planToActivate.start_date)
+        : null;
+      const originalEnd = planToActivate.end_date
+        ? new Date(planToActivate.end_date)
+        : null;
 
       let durationDays = 28; // Default 4 weeks
       if (originalStart && originalEnd) {
-        durationDays = Math.ceil((originalEnd.getTime() - originalStart.getTime()) / (1000 * 60 * 60 * 24));
+        durationDays = Math.ceil(
+          (originalEnd.getTime() - originalStart.getTime()) /
+            (1000 * 60 * 60 * 24)
+        );
       }
 
       const startDate = new Date(activationStartDate);
@@ -134,64 +152,75 @@
       endDate.setDate(endDate.getDate() + durationDays);
 
       // Update the plan with new dates and activate it
-      const updateResponse = await fetch(`http://localhost:3000/api/v1/training-plans/${planToActivate.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          start_date: startDate.toISOString().split('T')[0],
-          end_date: endDate.toISOString().split('T')[0]
-        })
-      });
+      const updateResponse = await fetch(
+        `http://localhost:3000/api/v1/training-plans/${planToActivate.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            start_date: startDate.toISOString().split("T")[0],
+            end_date: endDate.toISOString().split("T")[0],
+          }),
+        }
+      );
 
       if (!updateResponse.ok) {
-        throw new Error('Failed to update plan dates');
+        throw new Error("Failed to update plan dates");
       }
 
       // Activate the plan
-      const activateResponse = await fetch(`http://localhost:3000/api/v1/training-plans/${planToActivate.id}/activate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({})
-      });
+      const activateResponse = await fetch(
+        `http://localhost:3000/api/v1/training-plans/${planToActivate.id}/activate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({}),
+        }
+      );
 
       if (!activateResponse.ok) {
-        throw new Error('Failed to activate plan');
+        throw new Error("Failed to activate plan");
       }
 
       await fetchPlans();
       closeActivateModal();
       closeModal();
     } catch (error) {
-      console.error('Error activating plan:', error);
-      errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      console.error("Error activating plan:", error);
+      errorMessage =
+        error instanceof Error ? error.message : "An error occurred";
     } finally {
       isActivating = false;
     }
   }
 
   async function deletePlan(planId: string) {
-    if (!confirm('Are you sure you want to delete this training plan?')) {
+    if (!confirm("Are you sure you want to delete this training plan?")) {
       return;
     }
 
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/training-plans/${planId}`, {
-        method: 'DELETE'
-      });
+      const response = await fetch(
+        `http://localhost:3000/api/v1/training-plans/${planId}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to delete plan');
+        throw new Error("Failed to delete plan");
       }
 
       await fetchPlans();
       closeModal();
     } catch (error) {
-      console.error('Error deleting plan:', error);
-      errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      console.error("Error deleting plan:", error);
+      errorMessage =
+        error instanceof Error ? error.message : "An error occurred";
     }
   }
 
@@ -208,11 +237,12 @@
   <header>
     <div>
       <h1>My Training Plans</h1>
-      <p class="subtitle">View and manage your active and past training programs</p>
+      <p class="subtitle">
+        View and manage your active and past training programs
+      </p>
     </div>
     <div class="header-actions">
       <a href="/templates" class="btn-primary">Browse Templates</a>
-      <a href="/workouts" class="btn-secondary">My Workouts</a>
     </div>
   </header>
 
@@ -229,14 +259,16 @@
     <div class="empty-state">
       <div class="empty-icon">📋</div>
       <h2>No Training Plans Yet</h2>
-      <p>Start your fitness journey by choosing a pre-configured training plan!</p>
+      <p>
+        Start your fitness journey by choosing a pre-configured training plan!
+      </p>
       <a href="/templates" class="btn-primary">Browse Training Templates</a>
     </div>
   {:else}
     <div class="plans-section">
       <h2>Active Plans</h2>
       <div class="plans-grid">
-        {#each plans.filter(p => p.is_active) as plan (plan.id)}
+        {#each plans.filter((p) => p.is_active) as plan (plan.id)}
           <div class="plan-card active">
             <div class="plan-header">
               <div>
@@ -268,29 +300,41 @@
                   {#if getDaysRemaining(plan.end_date) !== null}
                     {@const daysLeft = getDaysRemaining(plan.end_date)}
                     <span class="days-remaining">
-                      {daysLeft > 0 ? `${daysLeft} days remaining` : daysLeft === 0 ? 'Ends today' : 'Completed'}
+                      {daysLeft > 0
+                        ? `${daysLeft} days remaining`
+                        : daysLeft === 0
+                          ? "Ends today"
+                          : "Completed"}
                     </span>
                   {/if}
                 </div>
                 <div class="progress-bar">
-                  <div class="progress-fill" style="width: {getProgressPercentage(plan.start_date, plan.end_date)}%"></div>
+                  <div
+                    class="progress-fill"
+                    style="width: {getProgressPercentage(
+                      plan.start_date,
+                      plan.end_date
+                    )}%"
+                  ></div>
                 </div>
               </div>
             {/if}
 
             <div class="plan-actions">
-              <button class="btn-view" onclick={() => viewPlanDetails(plan)}>View Details</button>
+              <button class="btn-view" onclick={() => viewPlanDetails(plan)}
+                >View Details</button
+              >
             </div>
           </div>
         {/each}
       </div>
     </div>
 
-    {#if plans.filter(p => !p.is_active).length > 0}
+    {#if plans.filter((p) => !p.is_active).length > 0}
       <div class="plans-section">
         <h2>Inactive Plans</h2>
         <div class="plans-grid">
-          {#each plans.filter(p => !p.is_active) as plan (plan.id)}
+          {#each plans.filter((p) => !p.is_active) as plan (plan.id)}
             <div class="plan-card">
               <div class="plan-header">
                 <div>
@@ -316,7 +360,9 @@
               </div>
 
               <div class="plan-actions">
-                <button class="btn-view" onclick={() => viewPlanDetails(plan)}>View Details</button>
+                <button class="btn-view" onclick={() => viewPlanDetails(plan)}
+                  >View Details</button
+                >
               </div>
             </div>
           {/each}
@@ -335,8 +381,12 @@
         <div>
           <h2>{selectedPlan.name}</h2>
           <div class="modal-meta">
-            <span class="status-badge {selectedPlan.is_active ? 'active' : 'inactive'}">
-              {selectedPlan.is_active ? 'Active' : 'Inactive'}
+            <span
+              class="status-badge {selectedPlan.is_active
+                ? 'active'
+                : 'inactive'}"
+            >
+              {selectedPlan.is_active ? "Active" : "Inactive"}
             </span>
             <span class="phase-badge">{selectedPlan.phase_type}</span>
           </div>
@@ -356,11 +406,15 @@
           <div class="details-grid">
             <div class="detail-item">
               <span class="detail-label">Start Date</span>
-              <span class="detail-value">{formatDate(selectedPlan.start_date)}</span>
+              <span class="detail-value"
+                >{formatDate(selectedPlan.start_date)}</span
+              >
             </div>
             <div class="detail-item">
               <span class="detail-label">End Date</span>
-              <span class="detail-value">{formatDate(selectedPlan.end_date)}</span>
+              <span class="detail-value"
+                >{formatDate(selectedPlan.end_date)}</span
+              >
             </div>
             <div class="detail-item">
               <span class="detail-label">Phase Type</span>
@@ -368,20 +422,31 @@
             </div>
             <div class="detail-item">
               <span class="detail-label">Status</span>
-              <span class="detail-value">{selectedPlan.is_active ? 'Active' : 'Inactive'}</span>
+              <span class="detail-value"
+                >{selectedPlan.is_active ? "Active" : "Inactive"}</span
+              >
             </div>
           </div>
         </div>
 
         {#if selectedPlan.start_date && selectedPlan.end_date}
           {@const daysLeft = getDaysRemaining(selectedPlan.end_date)}
-          {@const progress = getProgressPercentage(selectedPlan.start_date, selectedPlan.end_date)}
+          {@const progress = getProgressPercentage(
+            selectedPlan.start_date,
+            selectedPlan.end_date
+          )}
           <div class="section">
             <h3>Progress</h3>
             <div class="progress-info">
               <div class="progress-stat">
                 <span class="stat-label">Days Remaining</span>
-                <span class="stat-value">{daysLeft !== null ? (daysLeft > 0 ? daysLeft : 'Completed') : 'N/A'}</span>
+                <span class="stat-value"
+                  >{daysLeft !== null
+                    ? daysLeft > 0
+                      ? daysLeft
+                      : "Completed"
+                    : "N/A"}</span
+                >
               </div>
               <div class="progress-stat">
                 <span class="stat-label">Completion</span>
@@ -397,11 +462,17 @@
 
       <div class="modal-footer">
         {#if selectedPlan.is_active}
-          <button class="btn-warning" onclick={() => deactivatePlan(selectedPlan.id)}>
+          <button
+            class="btn-warning"
+            onclick={() => deactivatePlan(selectedPlan.id)}
+          >
             Deactivate Plan
           </button>
         {:else}
-          <button class="btn-primary" onclick={() => showActivateDialog(selectedPlan)}>
+          <button
+            class="btn-primary"
+            onclick={() => showActivateDialog(selectedPlan)}
+          >
             Activate Plan
           </button>
         {/if}
@@ -425,7 +496,10 @@
       </div>
 
       <div class="activate-modal-body">
-        <p class="activate-info">Choose when you'd like to start this training plan. The end date will be calculated based on the plan's duration.</p>
+        <p class="activate-info">
+          Choose when you'd like to start this training plan. The end date will
+          be calculated based on the plan's duration.
+        </p>
 
         <div class="date-selector">
           <label for="start-date">Start Date</label>
@@ -440,31 +514,53 @@
 
         {#if activationStartDate}
           {@const startDate = new Date(activationStartDate)}
-          {@const originalStart = planToActivate.start_date ? new Date(planToActivate.start_date) : null}
-          {@const originalEnd = planToActivate.end_date ? new Date(planToActivate.end_date) : null}
-          {@const durationDays = originalStart && originalEnd ? Math.ceil((originalEnd.getTime() - originalStart.getTime()) / (1000 * 60 * 60 * 24)) : 28}
+          {@const originalStart = planToActivate.start_date
+            ? new Date(planToActivate.start_date)
+            : null}
+          {@const originalEnd = planToActivate.end_date
+            ? new Date(planToActivate.end_date)
+            : null}
+          {@const durationDays =
+            originalStart && originalEnd
+              ? Math.ceil(
+                  (originalEnd.getTime() - originalStart.getTime()) /
+                    (1000 * 60 * 60 * 24)
+                )
+              : 28}
           {@const endDate = new Date(startDate)}
           {endDate.setDate(endDate.getDate() + durationDays)}
 
           <div class="date-preview">
             <div class="preview-item">
               <span class="preview-label">Plan Duration:</span>
-              <span class="preview-value">{durationDays} days ({Math.ceil(durationDays / 7)} weeks)</span>
+              <span class="preview-value"
+                >{durationDays} days ({Math.ceil(durationDays / 7)} weeks)</span
+              >
             </div>
             <div class="preview-item">
               <span class="preview-label">End Date:</span>
-              <span class="preview-value">{formatDate(endDate.toISOString().split('T')[0])}</span>
+              <span class="preview-value"
+                >{formatDate(endDate.toISOString().split("T")[0])}</span
+              >
             </div>
           </div>
         {/if}
       </div>
 
       <div class="activate-modal-footer">
-        <button class="btn-secondary" onclick={closeActivateModal} disabled={isActivating}>
+        <button
+          class="btn-secondary"
+          onclick={closeActivateModal}
+          disabled={isActivating}
+        >
           Cancel
         </button>
-        <button class="btn-primary" onclick={activatePlanWithDate} disabled={!activationStartDate || isActivating}>
-          {isActivating ? 'Activating...' : 'Activate Plan'}
+        <button
+          class="btn-primary"
+          onclick={activatePlanWithDate}
+          disabled={!activationStartDate || isActivating}
+        >
+          {isActivating ? "Activating..." : "Activate Plan"}
         </button>
       </div>
     </div>
@@ -514,7 +610,9 @@
     font-weight: 600;
     cursor: pointer;
     text-decoration: none;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
     display: inline-block;
   }
 
@@ -603,7 +701,9 @@
   }
 
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .empty-state {
@@ -654,7 +754,10 @@
     border-radius: 16px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     border: 2px solid #e0e0e0;
-    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+    transition:
+      transform 0.3s,
+      box-shadow 0.3s,
+      border-color 0.3s;
   }
 
   .plan-card.active {

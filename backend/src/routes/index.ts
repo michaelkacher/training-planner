@@ -1,5 +1,4 @@
 import { FastifyInstance } from 'fastify';
-import { registerWorkoutRoutes } from './workouts.js';
 import { registerTrainingPlanRoutes } from './training-plans.js';
 import { registerAuthRoutes } from './auth.js';
 import { registerWorkoutSessionRoutes } from './workout-sessions.js';
@@ -9,9 +8,6 @@ export function registerRoutes(fastify: FastifyInstance) {
   fastify.register(async (app) => {
     // Register auth routes (no authentication required)
     registerAuthRoutes(app);
-
-    // Register workout routes
-    registerWorkoutRoutes(app);
 
     // Register training plan routes
     registerTrainingPlanRoutes(app);

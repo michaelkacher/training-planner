@@ -48,7 +48,6 @@
       <div class="nav-links">
         <a href="/">Home</a>
         <a href="/templates">Templates</a>
-        <a href="/workouts">Workouts</a>
         <a href="/plans">Plans</a>
         <a href="/calendar">Calendar</a>
         <span class="nav-user">Welcome, {auth.user.name}</span>

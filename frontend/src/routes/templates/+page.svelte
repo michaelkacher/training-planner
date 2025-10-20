@@ -1,19 +1,19 @@
 <script lang="ts">
-  import { TRAINING_TEMPLATES } from '$lib/data/training-templates';
-  import type { TrainingTemplate } from '$lib/data/training-templates';
+  import { TRAINING_TEMPLATES } from "$lib/data/training-templates";
+  import type { TrainingTemplate } from "$lib/data/training-templates";
 
   let selectedTemplate = $state<TrainingTemplate | null>(null);
   let isStarting = $state(false);
   let errorMessage = $state<string | null>(null);
   let successMessage = $state<string | null>(null);
-  let startDate = $state<string>('');
+  let startDate = $state<string>("");
 
   // For now, using a hardcoded athlete ID. In a real app, this would come from authentication
-  const ATHLETE_ID = 'default-athlete-123';
+  const ATHLETE_ID = "default-athlete-123";
 
   function getTodayString(): string {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    return today.toISOString().split("T")[0];
   }
 
   function selectTemplate(template: TrainingTemplate) {
@@ -25,14 +25,14 @@
 
   function closeModal() {
     selectedTemplate = null;
-    startDate = '';
+    startDate = "";
     errorMessage = null;
     successMessage = null;
   }
 
   async function startFromTemplate(template: TrainingTemplate) {
     if (!startDate) {
-      errorMessage = 'Please select a start date';
+      errorMessage = "Please select a start date";
       return;
     }
 
@@ -46,14 +46,15 @@
       const durationMatch = template.duration.match(/(\d+)\s*weeks?/i);
       const weeks = durationMatch ? parseInt(durationMatch[1]) : 4;
       const endDate = new Date(planStartDate);
-      endDate.setDate(endDate.getDate() + (weeks * 7));
+      endDate.setDate(endDate.getDate() + weeks * 7);
 
       // Determine phase type based on template level
-      let phaseType: 'Off-Season' | 'Pre-Season' | 'Competition' | 'Recovery' = 'Off-Season';
-      if (template.title.includes('Competition')) {
-        phaseType = 'Competition';
-      } else if (template.title.includes('Pre-Season')) {
-        phaseType = 'Pre-Season';
+      let phaseType: "Off-Season" | "Pre-Season" | "Competition" | "Recovery" =
+        "Off-Season";
+      if (template.title.includes("Competition")) {
+        phaseType = "Competition";
+      } else if (template.title.includes("Pre-Season")) {
+        phaseType = "Pre-Season";
       }
 
       // Create training plan
@@ -62,38 +63,44 @@
         name: template.title,
         description: template.description,
         phase_type: phaseType,
-        start_date: planStartDate.toISOString().split('T')[0],
-        end_date: endDate.toISOString().split('T')[0],
+        start_date: planStartDate.toISOString().split("T")[0],
+        end_date: endDate.toISOString().split("T")[0],
         template_id: template.id,
-        phases: template.phases // Include phase data with exercises
+        phases: template.phases, // Include phase data with exercises
       };
 
-      const response = await fetch('http://localhost:3000/api/v1/training-plans', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(planData)
-      });
+      const response = await fetch(
+        "http://localhost:3000/api/v1/training-plans",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(planData),
+        }
+      );
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to create training plan');
+        throw new Error(error.error || "Failed to create training plan");
       }
 
       const createdPlan = await response.json();
 
       // Activate the plan
-      const activateResponse = await fetch(`http://localhost:3000/api/v1/training-plans/${createdPlan.id}/activate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({})
-      });
+      const activateResponse = await fetch(
+        `http://localhost:3000/api/v1/training-plans/${createdPlan.id}/activate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({}),
+        }
+      );
 
       if (!activateResponse.ok) {
-        throw new Error('Failed to activate training plan');
+        throw new Error("Failed to activate training plan");
       }
 
       successMessage = `Successfully started "${template.title}"! Your plan is now active. Redirecting to My Plans...`;
@@ -101,12 +108,12 @@
       // Close modal and redirect after 2 seconds
       setTimeout(() => {
         closeModal();
-        window.location.href = '/plans';
+        window.location.href = "/plans";
       }, 2000);
-
     } catch (error) {
-      console.error('Error starting training plan:', error);
-      errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      console.error("Error starting training plan:", error);
+      errorMessage =
+        error instanceof Error ? error.message : "An error occurred";
     } finally {
       isStarting = false;
     }
@@ -117,11 +124,12 @@
   <header>
     <div>
       <h1>Training Plan Templates</h1>
-      <p class="subtitle">Start from a pre-configured plan designed by experts</p>
+      <p class="subtitle">
+        Start from a pre-configured plan designed by experts
+      </p>
     </div>
     <div class="header-actions">
       <a href="/plans" class="btn-primary">My Plans</a>
-      <a href="/workouts" class="btn-secondary">My Workouts</a>
     </div>
   </header>
 
@@ -149,7 +157,10 @@
         <div class="phases-summary">
           <strong>{template.phases.length} Training Phases</strong>
           <span class="workout-count">
-            {template.phases.reduce((sum, phase) => sum + phase.workoutDays.length, 0)} Workout Days
+            {template.phases.reduce(
+              (sum, phase) => sum + phase.workoutDays.length,
+              0
+            )} Workout Days
           </span>
         </div>
 
@@ -199,7 +210,8 @@
 
           {#if startDate}
             {@const planStartDate = new Date(startDate)}
-            {@const durationMatch = selectedTemplate.duration.match(/(\d+)\s*weeks?/i)}
+            {@const durationMatch =
+              selectedTemplate.duration.match(/(\d+)\s*weeks?/i)}
             {@const weeks = durationMatch ? parseInt(durationMatch[1]) : 4}
             {@const durationDays = weeks * 7}
             {@const endDate = new Date(planStartDate)}
@@ -208,11 +220,19 @@
             <div class="date-preview">
               <div class="preview-item">
                 <span class="preview-label">Duration:</span>
-                <span class="preview-value">{weeks} weeks ({durationDays} days)</span>
+                <span class="preview-value"
+                  >{weeks} weeks ({durationDays} days)</span
+                >
               </div>
               <div class="preview-item">
                 <span class="preview-label">End Date:</span>
-                <span class="preview-value">{endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                <span class="preview-value"
+                  >{endDate.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}</span
+                >
               </div>
             </div>
           {/if}
@@ -235,7 +255,9 @@
                           <div class="exercise-header">
                             <strong>{exercise.name}</strong>
                             {#if exercise.sets && exercise.reps}
-                              <span class="sets-reps">{exercise.sets} × {exercise.reps}</span>
+                              <span class="sets-reps"
+                                >{exercise.sets} × {exercise.reps}</span
+                              >
                             {:else if exercise.reps}
                               <span class="sets-reps">{exercise.reps}</span>
                             {/if}
@@ -264,9 +286,15 @@
         {#if successMessage}
           <div class="success-message">{successMessage}</div>
         {/if}
-        <button class="btn-secondary" onclick={closeModal} disabled={isStarting}>Close</button>
-        <button class="btn-primary" onclick={() => startFromTemplate(selectedTemplate)} disabled={!startDate || isStarting}>
-          {isStarting ? 'Starting...' : 'Start This Program'}
+        <button class="btn-secondary" onclick={closeModal} disabled={isStarting}
+          >Close</button
+        >
+        <button
+          class="btn-primary"
+          onclick={() => startFromTemplate(selectedTemplate)}
+          disabled={!startDate || isStarting}
+        >
+          {isStarting ? "Starting..." : "Start This Program"}
         </button>
       </div>
     </div>
@@ -333,7 +361,9 @@
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
   }
 
   .btn-primary:hover {
@@ -353,7 +383,9 @@
     border-radius: 16px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     cursor: pointer;
-    transition: transform 0.3s, box-shadow 0.3s;
+    transition:
+      transform 0.3s,
+      box-shadow 0.3s;
     border: 2px solid transparent;
   }
 

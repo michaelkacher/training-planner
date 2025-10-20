@@ -1,15 +1,15 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount } from "svelte";
 
-  let backendHealth = $state('Checking...');
+  let backendHealth = $state("Checking...");
 
   onMount(async () => {
     try {
-      const response = await fetch('http://localhost:3000/health');
+      const response = await fetch("http://localhost:3000/health");
       const data = await response.json();
-      backendHealth = data.status === 'ok' ? 'Connected' : 'Error';
+      backendHealth = data.status === "ok" ? "Connected" : "Error";
     } catch (error) {
-      backendHealth = 'Disconnected';
+      backendHealth = "Disconnected";
     }
   });
 </script>
@@ -24,12 +24,14 @@
     <section class="hero">
       <h2>Build. Schedule. Track. Excel.</h2>
       <p>
-        Take your volleyball game to the next level with personalized training plans,
-        smart scheduling, and performance tracking designed for athletes like you.
+        Take your volleyball game to the next level with personalized training
+        plans, smart scheduling, and performance tracking designed for athletes
+        like you.
       </p>
       <div class="hero-actions">
-        <a href="/templates" class="btn-hero-primary">Browse Training Templates</a>
-        <a href="/workouts" class="btn-hero-secondary">Create Custom Workouts</a>
+        <a href="/templates" class="btn-hero-primary"
+          >Browse Training Templates</a
+        >
       </div>
     </section>
 
@@ -39,13 +41,6 @@
         <h3>My Training Plans</h3>
         <p>View and manage your active and past training programs</p>
         <span class="cta">View Plans →</span>
-      </a>
-
-      <a href="/workouts" class="feature-card">
-        <div class="icon">📋</div>
-        <h3>Custom Workouts</h3>
-        <p>Create workouts tailored to your position and goals</p>
-        <span class="cta">Get Started →</span>
       </a>
 
       <div class="feature-card">
@@ -59,7 +54,11 @@
     <section class="status">
       <div class="status-indicator">
         <span class="label">Backend Status:</span>
-        <span class="value {backendHealth === 'Connected' ? 'connected' : 'disconnected'}">
+        <span
+          class="value {backendHealth === 'Connected'
+            ? 'connected'
+            : 'disconnected'}"
+        >
           {backendHealth}
         </span>
       </div>
@@ -75,7 +74,8 @@
   :global(body) {
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #333;
     min-height: 100vh;
@@ -149,7 +149,9 @@
     font-size: 1.1rem;
     font-weight: 700;
     text-decoration: none;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
     display: inline-block;
   }
 
@@ -189,7 +191,9 @@
     padding: 2rem;
     border-radius: 15px;
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease;
     text-decoration: none;
     color: inherit;
     display: block;

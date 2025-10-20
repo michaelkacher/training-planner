@@ -309,10 +309,10 @@
 
     // Find which day card is under the touch point
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    const dayCard = element?.closest('.day-card');
+    const dayCard = element?.closest(".day-card");
 
     if (dayCard) {
-      const dateStr = dayCard.getAttribute('data-date');
+      const dateStr = dayCard.getAttribute("data-date");
       if (dateStr) {
         dragOverDate = dateStr;
       }
@@ -330,10 +330,10 @@
 
     // Find which day card the touch ended on
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    const dayCard = element?.closest('.day-card');
+    const dayCard = element?.closest(".day-card");
 
     if (dayCard) {
-      const dateStr = dayCard.getAttribute('data-date');
+      const dateStr = dayCard.getAttribute("data-date");
       if (dateStr && dateStr !== draggedSession.scheduled_date) {
         // Verify target is within current week
         const targetDate = new Date(dateStr);
@@ -394,8 +394,8 @@
       <h1>Training Calendar</h1>
       {#if activePlans.length > 0}
         <p class="subtitle">
-          {activePlans.length} Active Plan{activePlans.length > 1 ? 's' : ''}:
-          {activePlans.map(p => p.name).join(', ')}
+          {activePlans.length} Active Plan{activePlans.length > 1 ? "s" : ""}:
+          {activePlans.map((p) => p.name).join(", ")}
         </p>
       {:else}
         <p class="subtitle">No active training plans</p>
@@ -429,11 +429,15 @@
         {@const isTodayDay = isToday(day)}
         {@const dateStr = formatDateForAPI(day)}
         {@const isDropTarget = dragOverDate === dateStr}
-        {@const hasBeingDragged = sessions.some(s => s.id === draggedSession?.id)}
+        {@const hasBeingDragged = sessions.some(
+          (s) => s.id === draggedSession?.id
+        )}
         <div
           class="day-card {isTodayDay ? 'today' : ''} {sessions.length > 0
             ? 'has-session'
-            : ''} {isDropTarget ? 'drop-target' : ''} {hasBeingDragged ? 'dragging' : ''}"
+            : ''} {isDropTarget ? 'drop-target' : ''} {hasBeingDragged
+            ? 'dragging'
+            : ''}"
           data-date={dateStr}
           ondragover={(e) => handleDragOver(e, day)}
           ondragleave={handleDragLeave}
@@ -497,11 +501,49 @@
           <div class="detail-section">
             <div class="detail-label">Workout</div>
             <div class="detail-value workout-title">
-              {selectedSession.workout_title || selectedSession.workout_summary || "No details available"}
+              {selectedSession.workout_title ||
+                selectedSession.workout_summary ||
+                "No details available"}
             </div>
           </div>
 
           {#if selectedSession.exercises && selectedSession.exercises.length > 0}
+            <div class="detail-section">
+              <div class="detail-label">Status</div>
+              <div class="status-buttons">
+                <button
+                  class="status-btn {selectedSession.status === 'completed'
+                    ? 'active'
+                    : ''}"
+                  style="--status-color: #10b981"
+                  onclick={() => updateSessionStatus("completed")}
+                  disabled={isSaving}
+                >
+                  ✓ Completed
+                </button>
+                <button
+                  class="status-btn {selectedSession.status === 'partial'
+                    ? 'active'
+                    : ''}"
+                  style="--status-color: #f59e0b"
+                  onclick={() => updateSessionStatus("partial")}
+                  disabled={isSaving}
+                >
+                  ◐ Partial
+                </button>
+                <button
+                  class="status-btn {selectedSession.status === 'skipped'
+                    ? 'active'
+                    : ''}"
+                  style="--status-color: #9ca3af"
+                  onclick={() => updateSessionStatus("skipped")}
+                  disabled={isSaving}
+                >
+                  ⊘ Skipped
+                </button>
+              </div>
+            </div>
+
             <div class="detail-section exercises-section">
               <div class="detail-label">Exercises</div>
               <div class="exercises-list">
@@ -516,10 +558,13 @@
                         <span class="exercise-meta">{exercise.sets} sets</span>
                       {/if}
                       {#if exercise.reps}
-                        <span class="exercise-meta">× {exercise.reps} reps</span>
+                        <span class="exercise-meta">× {exercise.reps} reps</span
+                        >
                       {/if}
                       {#if exercise.focus}
-                        <span class="exercise-focus">Focus: {exercise.focus}</span>
+                        <span class="exercise-focus"
+                          >Focus: {exercise.focus}</span
+                        >
                       {/if}
                     </div>
                     {#if exercise.notes}
@@ -530,42 +575,6 @@
               </div>
             </div>
           {/if}
-
-          <div class="detail-section">
-            <div class="detail-label">Status</div>
-            <div class="status-buttons">
-              <button
-                class="status-btn {selectedSession.status === 'completed'
-                  ? 'active'
-                  : ''}"
-                style="--status-color: #10b981"
-                onclick={() => updateSessionStatus("completed")}
-                disabled={isSaving}
-              >
-                ✓ Completed
-              </button>
-              <button
-                class="status-btn {selectedSession.status === 'partial'
-                  ? 'active'
-                  : ''}"
-                style="--status-color: #f59e0b"
-                onclick={() => updateSessionStatus("partial")}
-                disabled={isSaving}
-              >
-                ◐ Partial
-              </button>
-              <button
-                class="status-btn {selectedSession.status === 'skipped'
-                  ? 'active'
-                  : ''}"
-                style="--status-color: #9ca3af"
-                onclick={() => updateSessionStatus("skipped")}
-                disabled={isSaving}
-              >
-                ⊘ Skipped
-              </button>
-            </div>
-          </div>
 
           <div class="detail-section">
             <div class="detail-label">Notes</div>
