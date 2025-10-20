@@ -258,7 +258,7 @@
       </p>
     </div>
     <div class="header-actions">
-      <a href="/templates" class="btn-primary">Browse Templates</a>
+      <a href="/create" class="btn-primary">Create Custom Workout</a>
     </div>
   </header>
 
@@ -276,9 +276,9 @@
       <div class="empty-icon">📋</div>
       <h2>No Training Plans Yet</h2>
       <p>
-        Start your fitness journey by choosing a pre-configured training plan!
+        Start your fitness journey by creating a custom workout plan!
       </p>
-      <a href="/templates" class="btn-primary">Browse Training Templates</a>
+      <a href="/create" class="btn-primary">Create Custom Workout</a>
     </div>
   {:else}
     <div class="plans-section">

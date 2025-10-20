@@ -47,7 +47,6 @@
       <a href="/" class="nav-brand">🏐 Training Planner</a>
       <div class="nav-links">
         <a href="/">Home</a>
-        <a href="/templates">Templates</a>
         <a href="/plans">Plans</a>
         <a href="/calendar">Calendar</a>
         <a href="/create">Create Workout</a>

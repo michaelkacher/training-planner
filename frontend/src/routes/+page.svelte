@@ -29,8 +29,8 @@
         like you.
       </p>
       <div class="hero-actions">
-        <a href="/templates" class="btn-hero-primary"
-          >Browse Training Templates</a
+        <a href="/create" class="btn-hero-primary"
+          >Create Custom Workout</a
         >
       </div>
     </section>
