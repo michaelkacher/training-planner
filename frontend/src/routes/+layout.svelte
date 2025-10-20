@@ -50,6 +50,7 @@
         <a href="/templates">Templates</a>
         <a href="/plans">Plans</a>
         <a href="/calendar">Calendar</a>
+        <a href="/create">Create Workout</a>
         <span class="nav-user">Welcome, {auth.user.name}</span>
         <button onclick={handleLogout} class="btn-logout">Logout</button>
       </div>
