@@ -1,28 +1,20 @@
 {
-  "name": "training-planner",
+  "name": "fullstack-app",
   "version": "1.0.0",
-  "description": "Athlete Training Planner Application for Volleyball Athletes",
   "private": true,
-  "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" --names \"BACKEND,FRONTEND\" --prefix-colors \"blue,magenta\"",
-    "dev:frontend": "cd frontend && npm run dev",
-    "dev:backend": "cd backend && npm run dev",
-    "build": "npm run build:backend && npm run build:frontend",
-    "build:backend": "cd backend && npm run build",
-    "build:frontend": "cd frontend && npm run build",
-    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
-    "clean": "rimraf frontend/node_modules backend/node_modules node_modules frontend/.svelte-kit backend/dist"
-  },
-  "keywords": [
-    "training",
-    "volleyball",
-    "athlete",
-    "planner"
+  "workspaces": [
+    "apps/*",
+    "packages/*"
   ],
-  "author": "",
-  "license": "ISC",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "test:e2e": "cd apps/web && playwright test",
+    "lint": "turbo run lint"
+  },
   "devDependencies": {
-    "concurrently": "^9.1.2",
-    "rimraf": "^6.0.1"
+    "turbo": "^2.0.0",
+    "typescript": "^5.6.0"
   }
 }

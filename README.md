@@ -1,254 +1,156 @@
-# Athlete Training Planner
+# Claude Sub-Agents Setup
 
-A comprehensive web application for volleyball athletes to create personalized training plans, manage schedules via an interactive calendar, receive timely reminders, and track performance data.
+Complete setup for using Claude sub-agents with your Next.js + Fastify project.
 
-## 📚 Documentation
+## Recommended Stack
 
-- **[Quick Start Guide](QUICKSTART.md)** - Get up and running in minutes
-- **[Development Guide](DEVELOPMENT_GUIDE.md)** - Architecture, patterns, and best practices
-- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute to the project
-- **[Changelog](CHANGELOG.md)** - Project history and version notes
-- **[Workout Feature Docs](WORKOUT_FEATURE.md)** - Workout builder details
-- **[Svelte 5 Upgrade Notes](SVELTE5-UPGRADE.md)** - Migration from Svelte 4
-
-## Tech Stack
-
-- **Frontend**: SvelteKit 2 + Svelte 5 with TypeScript
-- **Backend**: Node.js + Fastify 5 with TypeScript
+- **Frontend**: Next.js 15 (App Router) + TypeScript + Tailwind CSS
+- **Backend**: Node.js + Fastify 5 + TypeScript
 - **Database**: PostgreSQL via Supabase
 - **Deployment**: Vercel
-- **Notifications**: Twilio (SMS) + Email
-- **Calendar Integration**: iCal format for Google/Apple Calendar
+- **Testing**: Vitest + Playwright
 
-## Features
-
-### Plan Creation & Management
-- Athlete profile with position and goals
-- Custom workout builder with volleyball-specific types
-- Training phase templates
-- "Build My Plan" wizard
-
-### Scheduling & Calendar
-- Interactive calendar (Monthly/Weekly/Daily views)
-- Drag-and-drop rescheduling
-- Recurring workouts
-- Notification system (in-app, email, SMS)
-- Training load visualization
-
-### Tracking & Review
-- Mark workouts as complete
-- Post-workout logging (duration, RPE, notes)
-- Weekly compliance reports
-- Progress graphs and trends
-
-## Project Structure
+## Directory Structure
 
 ```
-training-planner/
-├── frontend/              # SvelteKit frontend application
-│   ├── src/
-│   │   ├── lib/          # Shared components and utilities
-│   │   ├── routes/       # SvelteKit routes and pages
-│   │   └── app.html      # HTML template
-│   └── package.json
-│
-├── backend/              # Fastify backend API
-│   ├── src/
-│   │   ├── config/       # Configuration files (Supabase, etc.)
-│   │   ├── routes/       # API route handlers
-│   │   ├── services/     # Business logic (notifications, etc.)
-│   │   ├── types/        # TypeScript type definitions
-│   │   └── index.ts      # Main server file
-│   └── package.json
-│
-├── .env                  # Environment variables (DO NOT COMMIT)
-├── .env.example          # Example environment variables
-└── package.json          # Root package.json for unified commands
+.claude/
+├── commands/           # Reusable commands
+│   ├── new-component.md
+│   ├── new-api-route.md
+│   ├── add-page.md
+│   ├── setup-feature.md
+│   ├── fix-bug.md
+│   ├── refactor.md
+│   └── deploy.md
+├── frontend/
+│   └── CLAUDE.md      # Frontend agent instructions
+├── backend/
+│   └── CLAUDE.md      # Backend agent instructions
+├── styles/
+│   └── CLAUDE.md      # Styles agent instructions
+└── tests/
+    └── CLAUDE.md      # Tests agent instructions
 ```
 
-## Getting Started
+## Installation
 
-### Prerequisites
+1. Copy the `.claude` directory to your project root
+2. Copy `CLAUDE.md` to your project root
+3. Start using the commands!
 
-- **Node.js 20+ and npm** (required for Svelte 5 and Fastify 5)
-- A Supabase account (for database)
-- (Optional) Twilio account for SMS notifications
+## Usage
 
-### Installation
+### Talk to Specific Agents
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd training-planner
-   ```
+"@frontend Create a user profile component"
+"@backend Add a users API endpoint"
+"@styles Update the button component styling"
+"@tests Add e2e tests for login flow"
 
-2. **Install all dependencies**
-   ```bash
-   npm run install:all
-   ```
-   This will install dependencies for the root, frontend, and backend projects.
+### Use Commands
 
-3. **Set up environment variables**
-   ```bash
-   cp .env.example .env
-   ```
+"Create a new Button component that supports primary and secondary variants"
+"Add a new page for user settings at /settings"
+"Set up authentication feature with login and signup"
+"Fix bug: users not loading on dashboard"
+"Deploy to production"
 
-   Edit `.env` and configure your credentials:
-   ```env
-   # Supabase (Required)
-   SUPABASE_URL=your_supabase_project_url
-   SUPABASE_ANON_KEY=your_supabase_anon_key
+## Project Setup
 
-   # Twilio (Optional - for SMS)
-   TWILIO_ACCOUNT_SID=your_twilio_account_sid
-   TWILIO_AUTH_TOKEN=your_twilio_auth_token
-   TWILIO_PHONE_NUMBER=your_twilio_phone_number
-
-   # For local development, set MOCK_NOTIFICATIONS=true
-   MOCK_NOTIFICATIONS=true
-   ```
-
-### Running the Application
-
-**Development Mode (with hot reloading)**
-```bash
-npm run dev
-```
-
-This single command starts both the frontend and backend servers:
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:3000
-
-The development environment includes:
-- Hot module reloading for frontend changes
-- Auto-restart for backend changes (via tsx watch)
-- Colored console output for easy debugging
-
-### Building for Production
+### Initialize Project
 
 ```bash
-npm run build
+# Create monorepo structure
+npm init -y
+mkdir -p apps/web apps/api packages/types packages/config
+
+# Install dependencies
+npm install -D typescript turbo
 ```
 
-This builds both the frontend and backend applications.
+### Frontend Setup (Next.js)
+
+```bash
+cd apps/web
+npx create-next-app@latest . --typescript --tailwind --app --no-src-dir
+npm install react-hook-form zod @hookform/resolvers/zod @radix-ui/react-icons
+npx shadcn@latest init
+```
+
+### Backend Setup (Fastify)
+
+```bash
+cd apps/api
+npm init -y
+npm install fastify @fastify/cors dotenv
+npm install -D typescript tsx @types/node
+npm install drizzle-orm postgres
+npm install -D drizzle-kit
+```
+
+### Testing Setup
+
+```bash
+# Frontend tests
+cd apps/web
+npm install -D vitest @vitejs/plugin-react jsdom @testing-library/react @testing-library/user-event @playwright/test msw
+
+# Backend tests
+cd apps/api
+npm install -D vitest @vitest/coverage-v8
+```
 
 ## Development
 
-### Running Frontend Only
 ```bash
-npm run dev:frontend
+# Start everything
+npm run dev
+
+# Frontend: http://localhost:3000
+# Backend: http://localhost:3001
 ```
 
-### Running Backend Only
-```bash
-npm run dev:backend
+## Package Scripts
+
+Add to root `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "test:e2e": "cd apps/web && playwright test"
+  }
+}
 ```
 
-### API Endpoints
+## Environment Variables
 
-The backend exposes the following API endpoints:
-
-- `GET /health` - Health check endpoint
-- `GET /api/v1/athletes` - Get athletes
-- `GET /api/v1/workouts` - Get workouts
-- `GET /api/v1/schedules` - Get scheduled workouts
-
-(More endpoints will be added as features are implemented)
-
-### Database Setup
-
-1. Create a Supabase project at https://supabase.com
-2. Copy your project URL and anon key to the `.env` file
-3. Run database migrations (coming soon)
-
-### Notification Configuration
-
-**Development Mode:**
-Set `MOCK_NOTIFICATIONS=true` in your `.env` file to log notifications to the console instead of sending actual emails/SMS.
-
-**Production Mode:**
-1. Configure Twilio credentials in `.env`
-2. Set `MOCK_NOTIFICATIONS=false`
-3. Notifications will be sent 1 hour before scheduled workouts
-
-## Deployment
-
-### Vercel Deployment
-
-1. Install Vercel CLI:
-   ```bash
-   npm install -g vercel
-   ```
-
-2. Deploy:
-   ```bash
-   vercel
-   ```
-
-3. Configure environment variables in Vercel dashboard
-
-## Contributing
-
-(Add contribution guidelines here)
-
-## License
-
-(Add license information here)
-
-## Troubleshooting
-
-### Port Already in Use Error
-
-If you see "address already in use" for port 3000 or 5173:
-
-**Quick Fix (Windows) - Option 1: PowerShell (Recommended):**
-```powershell
-# Right-click kill-ports.ps1 → Run with PowerShell
-# OR from PowerShell terminal:
-.\kill-ports.ps1
+### Frontend (.env.local)
+```
+NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-**Quick Fix (Windows) - Option 2: Batch File:**
-```bash
-# Double-click kill-ports.bat
-# OR from command prompt:
-kill-ports.bat
+### Backend (.env)
+```
+DATABASE_URL=postgresql://...
+SUPABASE_URL=your-supabase-url
+SUPABASE_SERVICE_KEY=your-service-key
+JWT_SECRET=your-secret
+FRONTEND_URL=http://localhost:3000
 ```
 
-**Manual Fix:**
-```bash
-# Find process on port 3000
-netstat -ano | findstr :3000
+## Tips
 
-# Kill the process (replace 1234 with the PID from above)
-taskkill //F //PID 1234
-```
+1. Use `@orchestration` for high-level architecture decisions
+2. Use specific agents (@frontend, @backend, @styles, @tests) for implementation
+3. Leverage commands for common tasks
+4. Keep types in `packages/types` and share between apps
+5. Run tests before committing
 
-**Or change the port in `.env`:**
-```env
-PORT=3001
-```
+## More Information
 
-### Backend Not Starting
-
-Make sure you're using Node.js 20 or higher:
-```bash
-node --version
-# Should show v20.x.x or v22.x.x
-```
-
-If you need to upgrade Node.js, use [nvm-windows](https://github.com/coreybutler/nvm-windows):
-```bash
-nvm install 22
-nvm use 22
-```
-
-### Frontend Shows "Disconnected" Status
-
-1. Make sure backend is running on port 3000
-2. Check backend console for errors
-3. Test: `curl http://localhost:3000/health`
-
-## Support
-
-For issues and questions, please create an issue in the repository.
+See individual CLAUDE.md files for detailed agent-specific guidelines.
