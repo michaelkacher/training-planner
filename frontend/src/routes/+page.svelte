@@ -43,12 +43,12 @@
         <span class="cta">View Plans →</span>
       </a>
 
-      <div class="feature-card">
+      <a href="/smart-calendar" class="feature-card">
         <div class="icon">📅</div>
         <h3>Smart Calendar</h3>
-        <p>Drag-and-drop scheduling with automatic reminders</p>
-        <span class="cta-disabled">Coming Soon</span>
-      </div>
+        <p>Sync your workouts with Google, Outlook, and Apple Calendar</p>
+        <span class="cta">Connect Calendar →</span>
+      </a>
     </section>
 
     <section class="status">
