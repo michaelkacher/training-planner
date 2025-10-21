@@ -1,6 +1,7 @@
 export default {
   plugins: {
-    tailwindcss: {},
+    // Use the Tailwind postcss bridge package (installed as @tailwindcss/postcss)
+    '@tailwindcss/postcss': {},
     autoprefixer: {},
   },
 }

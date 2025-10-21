@@ -1,5 +1,5 @@
 <script lang="ts">
-  import '../app.css';
+  import "../app.css";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
@@ -7,6 +7,7 @@
   import favicon from "$lib/assets/favicon.svg";
 
   let { children } = $props();
+  let showMobileMenu = false;
 
   // Public routes that don't require authentication
   const publicRoutes = ["/login", "/register"];
@@ -43,19 +44,94 @@
 </svelte:head>
 
 {#if auth.user}
-  <nav class="navbar">
-    <div class="nav-content">
-      <a href="/" class="nav-brand">🏐 Training Planner</a>
-      <div class="nav-links">
-        <a href="/">Home</a>
-        <a href="/plans">Plans</a>
-        <a href="/calendar">Calendar</a>
-        <a href="/create">Create Workout</a>
-        <span class="nav-user">Welcome, {auth.user.name}</span>
-        <button onclick={handleLogout} class="btn-logout">Logout</button>
+  <header class="nav-bar shadow-sm">
+    <div class="page-container flex items-center justify-between py-3">
+      <a href="/" class="flex items-center gap-3 nav-brand">
+        <span
+          class="rounded-full bg-[linear-gradient(90deg,var(--primary),var(--accent))] w-9 h-9 flex items-center justify-center text-white font-bold"
+          >🏐</span
+        >
+        <span class="hidden sm:inline-block ml-1 text-lg font-bold"
+          >Training Planner</span
+        >
+      </a>
+
+      <nav class="hidden sm:flex items-center gap-6">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/plans" class="nav-link">Plans</a>
+        <a href="/calendar" class="nav-link">Calendar</a>
+        <a href="/create" class="nav-link">Create</a>
+      </nav>
+
+      <div class="hidden sm:flex items-center gap-4">
+        <div class="text-sm text-slate-700">Welcome, {auth.user.name}</div>
+        <button onclick={handleLogout} class="btn-secondary">Logout</button>
+      </div>
+
+      <!-- Mobile menu button -->
+      <div class="sm:hidden">
+        <button
+          aria-expanded={showMobileMenu}
+          aria-controls="mobile-menu"
+          aria-label="Toggle menu"
+          class="btn-ghost focus-ring"
+          onclick={() => (showMobileMenu = !showMobileMenu)}
+        >
+          {#if showMobileMenu}
+            <svg
+              class="w-6 h-6"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          {:else}
+            <svg
+              class="w-6 h-6"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          {/if}
+        </button>
       </div>
     </div>
-  </nav>
+
+    {#if showMobileMenu}
+      <div
+        id="mobile-menu"
+        class="sm:hidden border-t border-slate-100 bg-white"
+      >
+        <div class="page-container py-3 flex flex-col gap-2">
+          <a href="/" class="nav-link">Home</a>
+          <a href="/plans" class="nav-link">Plans</a>
+          <a href="/calendar" class="nav-link">Calendar</a>
+          <a href="/create" class="nav-link">Create</a>
+          <div
+            class="pt-2 border-t border-slate-100 mt-2 flex items-center justify-between"
+          >
+            <div class="text-sm text-slate-700">{auth.user.name}</div>
+            <button onclick={handleLogout} class="btn-secondary">Logout</button>
+          </div>
+        </div>
+      </div>
+    {/if}
+  </header>
 {/if}
 
 {@render children?.()}
