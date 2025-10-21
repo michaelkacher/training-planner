@@ -296,6 +296,12 @@ END:VCALENDAR`;
                     {workout.status === "completed" ? "✓ Completed" : workout.status === "scheduled" ? "Scheduled" : workout.status}
                   </span>
                 </div>
+                <a href="/calendar?session={workout.id}" class="workout-info-icon" title="View workout details">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 16V12M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </a>
               </div>
             {/each}
           </div>
@@ -499,6 +505,7 @@ END:VCALENDAR`;
     background: #f9fafb;
     border-radius: 12px;
     border-left: 4px solid #667eea;
+    position: relative;
   }
 
   .workout-date {
@@ -568,6 +575,23 @@ END:VCALENDAR`;
   .status-badge.completed {
     background: #d1fae5;
     color: #10b981;
+  }
+
+  .workout-info-icon {
+    position: absolute;
+    bottom: 0.75rem;
+    right: 0.75rem;
+    color: #9ca3af;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+  }
+
+  .workout-info-icon:hover {
+    color: #667eea;
+    transform: scale(1.1);
   }
 
   .no-workouts {

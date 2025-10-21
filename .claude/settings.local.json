@@ -37,7 +37,9 @@
       "Bash(curl http://localhost:3000/api/v1/workout-sessions?athlete_id=default-athlete-123)",
       "Bash(curl -X POST http://localhost:3000/api/v1/training-plans -H \"Content-Type: application/json\" -d \"{\"\"athlete_id\"\":\"\"test-athlete-new\"\",\"\"name\"\":\"\"Test Plan New\"\",\"\"description\"\":\"\"Test\"\",\"\"phase_type\"\":\"\"Off-Season\"\",\"\"start_date\"\":\"\"2025-10-20\"\",\"\"end_date\"\":\"\"2025-11-20\"\"}\")",
       "Bash(curl -X POST http://localhost:3000/api/v1/training-plans/mock-1760909306120/activate -H \"Content-Type: application/json\" -d \"{}\")",
-      "Bash(curl http://localhost:3000/api/v1/workout-sessions?athlete_id=test-athlete-new)"
+      "Bash(curl http://localhost:3000/api/v1/workout-sessions?athlete_id=test-athlete-new)",
+      "Bash(npm install -D tailwindcss postcss autoprefixer)",
+      "Bash(npx tailwindcss init -p)"
     ],
     "deny": [],
     "ask": []
