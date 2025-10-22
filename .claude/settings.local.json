@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create svelte@latest . -- --template minimal --types typescript --no-add-ons --no-install)",
+      "Bash(npx sv@latest create . --template minimal --types ts --no-add-ons --no-install)",
+      "Bash(del CLAUDE.md)",
+      "Bash(rm CLAUDE.md)",
+      "Bash(node node_modules/tailwindcss/lib/cli.js init -p)",
+      "Bash(taskkill //F //PID 8744)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

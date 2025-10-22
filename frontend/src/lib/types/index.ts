@@ -1,0 +1,143 @@
+export interface Athlete {
+  id: string;
+  name: string;
+  email: string;
+  position: 'Setter' | 'Outside Hitter' | 'Middle Blocker' | 'Opposite' | 'Libero' | 'Defensive Specialist';
+  goals: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export type WorkoutType =
+  | 'Court Practice/Skills'
+  | 'Plyometrics'
+  | 'Agility'
+  | 'Strength'
+  | 'Conditioning'
+  | 'Rest'
+  | 'Other';
+
+export interface Workout {
+  id: string;
+  athlete_id: string;
+  name: string;
+  type: WorkoutType;
+  duration_minutes?: number;
+  sets?: number;
+  reps?: number;
+  intensity_rpe?: number;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type SessionStatus = 'scheduled' | 'completed' | 'partial' | 'skipped';
+
+export interface Exercise {
+  name: string;
+  sets?: number;
+  reps?: string;
+  focus: string;
+  notes?: string;
+}
+
+export interface WorkoutDay {
+  day: number;
+  title: string;
+  exercises: Exercise[];
+}
+
+export interface Phase {
+  name: string;
+  weeks: string;
+  description: string;
+  workoutDays: WorkoutDay[];
+}
+
+export interface TrainingPlan {
+  id: string;
+  athlete_id: string;
+  name: string;
+  description?: string;
+  phase_type: 'Off-Season' | 'Pre-Season' | 'Competition' | 'Recovery';
+  start_date?: string;
+  end_date?: string;
+  is_active: boolean;
+  template_id?: string;
+  phases?: Phase[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkoutSession {
+  id: string;
+  athlete_id: string;
+  training_plan_id: string;
+  workout_id?: string;
+  scheduled_date: string;
+  status: SessionStatus;
+  notes?: string;
+  workout_summary?: string;
+  workout_title?: string;
+  exercises?: Exercise[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NotificationPreference {
+  id: string;
+  athlete_id: string;
+  email_enabled: boolean;
+  sms_enabled: boolean;
+  phone_number?: string;
+  reminder_minutes_before: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  athlete_id?: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  token: string;
+}
+
+// DTOs
+export interface CreateWorkoutDTO {
+  name: string;
+  type: WorkoutType;
+  duration_minutes?: number;
+  sets?: number;
+  reps?: number;
+  intensity_rpe?: number;
+  description?: string;
+}
+
+export interface CreateTrainingPlanDTO {
+  athlete_id: string;
+  name: string;
+  description?: string;
+  phase_type: 'Off-Season' | 'Pre-Season' | 'Competition' | 'Recovery';
+  start_date?: string;
+  end_date?: string;
+  phases?: Phase[];
+}
+
+export interface CreateWorkoutSessionDTO {
+  training_plan_id: string;
+  workout_id?: string;
+  scheduled_date: string;
+  workout_summary?: string;
+}
+
+export interface UpdateWorkoutSessionDTO {
+  status?: SessionStatus;
+  notes?: string;
+  workout_summary?: string;
+  scheduled_date?: string;
+}
